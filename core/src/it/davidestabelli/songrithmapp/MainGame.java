@@ -2,6 +2,7 @@ package it.davidestabelli.songrithmapp;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import it.davidestabelli.songrithmapp.Screens.MenuScreen;
 import it.davidestabelli.songrithmapp.Screens.PlayScreen;
 
 public class MainGame extends Game {
@@ -14,7 +15,7 @@ public class MainGame extends Game {
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
-		setScreen(new PlayScreen(this));
+		setScreen(new MenuScreen(this));
 	}
 
 	@Override

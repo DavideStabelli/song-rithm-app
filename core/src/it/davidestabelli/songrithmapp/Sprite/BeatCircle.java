@@ -1,36 +1,46 @@
 package it.davidestabelli.songrithmapp.Sprite;
 
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.physics.box2d.World;
 
 import it.davidestabelli.songrithmapp.MainGame;
 
-public class BeatCircle extends Sprite{
-    public static final float CIRCLE_RADIOUS = 15;
+public class BeatCircle{
+    public static final float CIRCLE_RADIUS = 150;
+    public static final float END_ANIMATION_CIRCLE_RADIUS = 10;
+    public static final float ANIMATION_RADIUS_DELTA = 200;
 
-    public World world;
-    public Body b2body;
+    private Texture texture;
+    private Vector2 position;
 
-    public BeatCircle(World world, Vector2 position){
-        this.world = world;
+    private float radius;
 
-        Texture texture = new Texture("circle effect.png");
-        setRegion(texture);
+    public BeatCircle(Vector2 position){
+        this.texture = new Texture("Circle_(transparent).png");
+        this.position = position;
+        this.radius = CIRCLE_RADIUS;
+    }
 
-        BodyDef bdef = new BodyDef();
-        bdef.type = BodyDef.BodyType.StaticBody;
-        bdef.position.set(position.x / MainGame.PPM, position.y / MainGame.PPM);
-        b2body = world.createBody(bdef);
-        setBounds(0,0, CIRCLE_RADIOUS / MainGame.PPM, CIRCLE_RADIOUS / MainGame.PPM);
+    public boolean doAnimation(float dt){
+        radius -= ANIMATION_RADIUS_DELTA * dt;
+        if(radius <= END_ANIMATION_CIRCLE_RADIUS){
+            radius = CIRCLE_RADIUS;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void draw(SpriteBatch batch){
+        batch.draw(texture,
+                (position.x / MainGame.V_WIDTH) - (radius / MainGame.V_WIDTH)/2,
+                (position.y / MainGame.V_HEIGHT) - (radius / MainGame.V_HEIGHT)/2,
+                radius / MainGame.V_WIDTH,
+                radius / MainGame.V_HEIGHT);
     }
 
     public void dispose(){
-        world.destroyBody(b2body);
-        getTexture().dispose();
+        texture.dispose();
     }
 }
