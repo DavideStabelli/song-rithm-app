@@ -7,9 +7,11 @@ import it.davidestabelli.songrithmapp.MainGame;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		config.height = MainGame.V_HEIGHT*3;
-		config.width = MainGame.V_WIDTH*3;
+		config.height = MainGame.V_HEIGHT;
+		config.width = MainGame.V_WIDTH;
 		config.resizable = false;
+		config.fullscreen = false;
 		new LwjglApplication(new MainGame(), config);
+
 	}
 }

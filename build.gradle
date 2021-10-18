@@ -91,5 +91,6 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
         api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         compile "com.kotcrab.vis:vis-ui:$visuiVersion"
+        compile group: 'ws.schild', name: 'jave-all-deps', version: '3.2.0'
     }
 }
