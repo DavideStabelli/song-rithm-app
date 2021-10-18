@@ -52,6 +52,7 @@ public class MenuScreen implements Screen {
     VisTextField urlTextField;
     VisTextButton downloadButton;
     VisLabel linkInfo;
+    VisLabel downloadProgressPercentage;
     YouTubeDownlod ytVideo;
     VisProgressBar downloadProgressBar;
 
@@ -129,16 +130,15 @@ public class MenuScreen implements Screen {
         downloadButton = new VisTextButton("Download");
         downloadButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                linkInfo.setText("Downloading ...");
 
                 ytVideo = new YouTubeDownlod(urlTextField.getText());
-                /*VideoInfo videoInfo = ytVideo.requestVideoInfo();
-                linkInfo.setText(String.format("%s \n %d views", videoInfo.details().title(), videoInfo.details().viewCount()));*/
 
                 downloadProgressBar = new VisProgressBar(0,100,0.1f,false);
+                downloadProgressPercentage = new VisLabel("");
+
                 importFromUrlPopUp.row();
                 importFromUrlPopUp.add(downloadProgressBar).expand().fillX();
-
+                importFromUrlPopUp.add(downloadProgressPercentage);
                 ytVideo.downloadAudio();
             }
         });
@@ -181,13 +181,21 @@ public class MenuScreen implements Screen {
 
         // yt download managment
         if(importFromUrlPopUp != null && ytVideo != null){
-            if(ytVideo.isDownloading)
+            if(ytVideo.isDownloading) {
                 downloadProgressBar.setValue(ytVideo.downloadProgress);
+                downloadProgressPercentage.setText(String.format("%d%%",ytVideo.downloadProgress));
+                linkInfo.setText(ytVideo.videoInfoString);
+                downloadButton.setDisabled(true);
+                urlTextField.setDisabled(true);
+            }
             else {
                 importedFileList.updateVoices();
 
                 importFromUrlPopUp.removeActor(downloadProgressBar);
                 importFromUrlPopUp.fadeOut();
+
+                downloadButton.setDisabled(false);
+                urlTextField.setDisabled(false);
 
                 ytVideo = null;
             }

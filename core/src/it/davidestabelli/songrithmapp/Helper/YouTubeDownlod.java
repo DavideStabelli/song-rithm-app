@@ -46,6 +46,7 @@ public class YouTubeDownlod {
     public void downloadAudio(){
         isDownloading = true;
         VideoInfo info = requestVideoInfo();
+        videoInfoString = String.format("%s \n %d views", info.details().title(), info.details().viewCount());
         File outputDir = new File(ImportedFileHandler.FOLDER_PATH);
         Format format = info.bestAudioFormat();
         downloadProgress = 0;

@@ -81,7 +81,6 @@ public class ImportedFileHandler {
 
     public static MusicConverter getMusicFileFromImport(String fileName){
         String filePath = FOLDER_PATH + fileName + "/" + fileName + ".json";
-        File dataLocalFile = new File(filePath);
         try
         {
             String content = new String ( Files.readAllBytes( Paths.get(filePath) ) );
@@ -96,5 +95,22 @@ public class ImportedFileHandler {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static boolean deleteImport(String fileName){
+        String filePath = FOLDER_PATH + fileName;
+        try {
+            File directory = new File(filePath);
+            if(directory.exists()){
+                File[] files = directory.listFiles();
+                for (File file : files) {
+                    file.delete();
+                }
+            }
+            directory.delete();
+            return true;
+        } catch (Exception e){
+            return false;
+        }
     }
 }
