@@ -2,15 +2,19 @@ package it.davidestabelli.songrithmapp.Helper;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import com.alibaba.fastjson.JSONArray;
 import com.badlogic.gdx.files.FileHandle;
 
 import it.davidestabelli.songrithmapp.Helper.FFT.FFT;
 import it.davidestabelli.songrithmapp.Helper.FFT.WaveDecoder;
 import ws.schild.jave.Encoder;
+import ws.schild.jave.EncoderException;
 import ws.schild.jave.MultimediaObject;
 import ws.schild.jave.encode.AudioAttributes;
 import ws.schild.jave.encode.EncodingAttributes;
@@ -27,7 +31,27 @@ public class MusicConverter {
     private String fileName;
 
     List<Float>[] spectrumList;
-    List<Float> spectralFlux;
+
+    public MusicConverter(String oggPath, String wavPath, Map<String,Object> spectrumListMap) throws EncoderException {
+        this.oggTarget = new File(oggPath);
+        this.wavTarget = new File(wavPath);
+        spectrumList = new List[NUMBER_OF_SPECTRUMS];
+        for (int i = 0; i < spectrumList.length; i++) {
+            JSONArray mapArray = (JSONArray)spectrumListMap.get(String.format("%d",i));
+            List<Float> spectrum = new ArrayList<Float>();
+            for (Object value : mapArray) {
+                BigDecimal decimalValue = (BigDecimal) value;
+                spectrum.add(decimalValue.floatValue());
+            }
+            spectrumList[i] = spectrum;
+        }
+
+        //Getting infos
+        MultimediaObject sourceObject = new MultimediaObject(oggTarget);
+        duration = sourceObject.getInfo().getDuration();
+        sourceFormat = sourceObject.getInfo().getFormat();
+        fileName = oggTarget.getName().split("\\.")[0];
+    }
 
     public MusicConverter(File toConvert) {
         this.source = toConvert;

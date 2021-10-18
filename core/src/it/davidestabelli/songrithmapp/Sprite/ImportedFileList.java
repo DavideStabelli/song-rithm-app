@@ -29,16 +29,23 @@ public class ImportedFileList extends VisWindow {
 
 	private void addAllVoices() {
 		tree = new VisTree();
-        List<ImportedFile> importedFiles = new ArrayList<ImportedFile>();
         for (String fileName : ImportedFileHandler.getFileList()) {
             ImportedFile importedFile = new ImportedFile(new VisLabel(fileName));
             importedFile.setValue(fileName);
-            importedFiles.add(importedFile);
             tree.add(importedFile);
         }
 
-		add(tree).expand().fill();
+        add(tree).expand().fill();
 	}
+
+    public void updateVoices() {
+        tree.clearChildren();
+        for (String fileName : ImportedFileHandler.getFileList()) {
+            ImportedFile importedFile = new ImportedFile(new VisLabel(fileName));
+            importedFile.setValue(fileName);
+            tree.add(importedFile);
+        }
+    }
 
     public MusicConverter getSelectedMusicFile(){
         Optional optionalValue = Optional.of(tree.getSelectedValue());

@@ -1,12 +1,21 @@
 package it.davidestabelli.songrithmapp.Helper;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JFileChooser;
 
@@ -34,12 +43,21 @@ public class ImportedFileHandler {
                 File wavLocalFile = new File(wavFilePathString);
                 Files.copy(musicElaboratedFile.getWavTarget().file().toPath(), wavLocalFile.toPath());
 
-                String dataFilePathString = localPathString + "/" + musicElaboratedFile.getFileName() + ".rs";
+                String dataFilePathString = localPathString + "/" + musicElaboratedFile.getFileName() + ".json";
                 File dataLocalFile = new File(dataFilePathString);
                 FileOutputStream outputStream = new FileOutputStream(dataLocalFile);
-                StringBuilder fileContent = new StringBuilder();
-                fileContent.append("sourcepath:");
-                fileContent.append(musicElaboratedFile.getPath());
+
+                Map<String,Object> fileContentMap = new HashMap<>();
+                fileContentMap.put("oggPath", musicElaboratedFile.getOggTarget().path());
+                fileContentMap.put("wavPath", musicElaboratedFile.getWavTarget().path());
+                Map<String,Object> fileSpectrumListMap = new HashMap<>();
+                for (int i = 0; i < musicElaboratedFile.getSpectrumList().length; i++) {
+                    List<Float> singleSpectrumList = musicElaboratedFile.getSpectrumList()[i];
+                    fileSpectrumListMap.put(String.format("%d", i), singleSpectrumList);
+                }
+                fileContentMap.put("spectrumList", fileSpectrumListMap);
+
+                JSONObject fileContent = new JSONObject(fileContentMap);
                 outputStream.write(fileContent.toString().getBytes());
                 outputStream.close();
             }
@@ -62,12 +80,21 @@ public class ImportedFileHandler {
     }
 
     public static MusicConverter getMusicFileFromImport(String fileName){
-        String filePath = FOLDER_PATH + fileName + "/" + fileName + ".ogg";
+        String filePath = FOLDER_PATH + fileName + "/" + fileName + ".json";
         File dataLocalFile = new File(filePath);
-
-        // DA SISTEMARE!
-        MusicConverter musicFile = new MusicConverter(dataLocalFile);
-        
-        return musicFile;
+        try
+        {
+            String content = new String ( Files.readAllBytes( Paths.get(filePath) ) );
+            Map<String,Object> readedMap = JSONObject.parseObject(content).getInnerMap();
+            String oggPath = (String) readedMap.get("oggPath");
+            String wavPath = (String) readedMap.get("wavPath");
+            Map spectrumListMap = (Map) readedMap.get("spectrumList");
+            return new MusicConverter(oggPath, wavPath, spectrumListMap);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

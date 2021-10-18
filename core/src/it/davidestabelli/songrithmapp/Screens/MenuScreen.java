@@ -12,17 +12,26 @@ import com.badlogic.gdx.scenes.scene2d.ui.Tree.Node;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.github.kiulian.downloader.downloader.YoutubeCallback;
+import com.github.kiulian.downloader.downloader.YoutubeProgressCallback;
+import com.github.kiulian.downloader.model.videos.VideoDetails;
+import com.github.kiulian.downloader.model.videos.VideoInfo;
 import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.util.TableUtils;
 import com.kotcrab.vis.ui.widget.VisImage;
 import com.kotcrab.vis.ui.widget.VisLabel;
+import com.kotcrab.vis.ui.widget.VisProgressBar;
 import com.kotcrab.vis.ui.widget.VisTextButton;
+import com.kotcrab.vis.ui.widget.VisTextField;
 import com.kotcrab.vis.ui.widget.VisTree;
 import com.kotcrab.vis.ui.widget.VisWindow;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
 import com.kotcrab.vis.ui.widget.file.FileTypeFilter;
 
+import java.io.File;
+
+import it.davidestabelli.songrithmapp.Helper.YouTubeDownlod;
 import it.davidestabelli.songrithmapp.MainGame;
 import it.davidestabelli.songrithmapp.Helper.ImportedFileHandler;
 import it.davidestabelli.songrithmapp.Helper.MusicConverter;
@@ -36,7 +45,15 @@ public class MenuScreen implements Screen {
 
     VisTextButton startButton;
     VisTextButton importFileButton;
+    VisTextButton importFromUrlButton;
     ImportedFileList importedFileList;
+
+    VisWindow importFromUrlPopUp;
+    VisTextField urlTextField;
+    VisTextButton downloadButton;
+    VisLabel linkInfo;
+    YouTubeDownlod ytVideo;
+    VisProgressBar downloadProgressBar;
 
     FileChooser fileChooser;
 
@@ -83,6 +100,7 @@ public class MenuScreen implements Screen {
             public void selected(Array<FileHandle> files) {
                 MusicConverter oggMusicFile = new MusicConverter(files.get(0).file());
                 ImportedFileHandler.importNewFile(oggMusicFile);
+                importedFileList.updateVoices();
             }
         });
 
@@ -98,10 +116,55 @@ public class MenuScreen implements Screen {
                 (Gdx.graphics.getHeight() / 8) * 5);
         stage.addActor(importFileButton);
 
+        // import popup
+        importFromUrlPopUp = new VisWindow("INSERIRE IL LINK DI YOUTUBE DA CUI SCARICARE IL BRANO");
+        importFromUrlPopUp.centerWindow();
+        importFromUrlPopUp.setSize((Gdx.graphics.getWidth() / 1.5f), (Gdx.graphics.getHeight() / 3));
+        importFromUrlPopUp.addCloseButton();
+        importFromUrlPopUp.setResizable(false);
+        importFromUrlPopUp.columnDefaults(2).left();
+        urlTextField = new VisTextField();
+        importFromUrlPopUp.add(urlTextField).expand().fillX();
+        importFromUrlPopUp.closeOnEscape();
+        downloadButton = new VisTextButton("Download");
+        downloadButton.addListener(new ClickListener() {
+            public void clicked(InputEvent event, float x, float y) {
+                linkInfo.setText("Downloading ...");
+
+                ytVideo = new YouTubeDownlod(urlTextField.getText());
+                /*VideoInfo videoInfo = ytVideo.requestVideoInfo();
+                linkInfo.setText(String.format("%s \n %d views", videoInfo.details().title(), videoInfo.details().viewCount()));*/
+
+                downloadProgressBar = new VisProgressBar(0,100,0.1f,false);
+                importFromUrlPopUp.row();
+                importFromUrlPopUp.add(downloadProgressBar).expand().fillX();
+
+                ytVideo.downloadAudio();
+            }
+        });
+        importFromUrlPopUp.add(downloadButton);
+        linkInfo = new VisLabel(". . .");
+        importFromUrlPopUp.row();
+        importFromUrlPopUp.add(linkInfo).expand().fill();
+
+        // import from URL
+        importFromUrlButton = new VisTextButton("Importa Da URL");
+        importFromUrlButton.addListener(new ClickListener() {
+            public void clicked(InputEvent event, float x, float y) {
+                stage.addActor(importFromUrlPopUp.fadeIn());
+            }
+        });
+        importFromUrlButton.setSize((Gdx.graphics.getWidth() / 6), (Gdx.graphics.getHeight() / 8));
+        importFromUrlButton.setPosition((Gdx.graphics.getWidth() / 4) * 3 - (startButton.getWidth() / 2),
+                (Gdx.graphics.getHeight() / 8) * 4);
+        stage.addActor(importFromUrlButton);
+
         // file list
         importedFileList = new ImportedFileList();
         importedFileList.setSize((Gdx.graphics.getWidth() / 2), Gdx.graphics.getHeight());
         importedFileList.setPosition(0, 0);
+        importedFileList.setMovable(false);
+        importedFileList.setResizable(false);
         stage.addActor(importedFileList);
     }
 
@@ -115,6 +178,20 @@ public class MenuScreen implements Screen {
 
     public void update(float dt) {
         handleInput(dt);
+
+        // yt download managment
+        if(importFromUrlPopUp != null && ytVideo != null){
+            if(ytVideo.isDownloading)
+                downloadProgressBar.setValue(ytVideo.downloadProgress);
+            else {
+                importedFileList.updateVoices();
+
+                importFromUrlPopUp.removeActor(downloadProgressBar);
+                importFromUrlPopUp.fadeOut();
+
+                ytVideo = null;
+            }
+        }
     }
 
     @Override
