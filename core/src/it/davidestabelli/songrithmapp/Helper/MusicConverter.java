@@ -21,18 +21,22 @@ import ws.schild.jave.encode.EncodingAttributes;
 
 public class MusicConverter {
     private static final int NUMBER_OF_SPECTRUMS = 19;
+    private static final float BEAT_TRACE_SAMPLE = 0.2f;
 
     private File source;		                 
     private File oggTarget;
     private File wavTarget;
 
-    private Long duration;
+    private Long duration; // millis
     private String sourceFormat;
     private String fileName;
 
-    List<Float>[] spectrumList;
+    private List<Float>[] spectrumList;
 
-    public MusicConverter(String oggPath, String wavPath, Map<String,Object> spectrumListMap) throws EncoderException {
+    private boolean hasBeatTrace;
+    private int[] beatTrace;
+
+    public MusicConverter(String oggPath, String wavPath, Map<String,Object> spectrumListMap, int[] beatTrace, String name) throws EncoderException {
         this.oggTarget = new File(oggPath);
         this.wavTarget = new File(wavPath);
         spectrumList = new List[NUMBER_OF_SPECTRUMS];
@@ -50,7 +54,19 @@ public class MusicConverter {
         MultimediaObject sourceObject = new MultimediaObject(oggTarget);
         duration = sourceObject.getInfo().getDuration();
         sourceFormat = sourceObject.getInfo().getFormat();
-        fileName = oggTarget.getName().split("\\.")[0];
+        fileName = name;
+
+        //Set Beat Trace
+        if(beatTrace == null) {
+            int beatsIntoTrace = Math.round((duration / 1000) / BEAT_TRACE_SAMPLE);
+            this.beatTrace = new int[beatsIntoTrace];
+            for (int i = 0; i < beatsIntoTrace; i++)
+                this.beatTrace[i] = 0;
+            this.hasBeatTrace = false;
+        } else {
+            this.beatTrace = beatTrace;
+            this.hasBeatTrace = true;
+        }
     }
 
     public MusicConverter(File toConvert) {
@@ -144,6 +160,39 @@ public class MusicConverter {
             oggTarget = null;   
             wavTarget = null;                                     
         }
+    }
+
+    public int getBeatTraceIndexFromMillis(Long millisPosition){
+        int index = 0;
+        index = Math.round((millisPosition * beatTrace.length) / duration);
+        return index;
+    }
+
+    public int getMillisFromBeatTraceIndex(int index){
+        return Math.round(index * BEAT_TRACE_SAMPLE * 1000);
+    }
+
+    public void setBeatTrace(Long millisPosition, int value){
+        int index = getBeatTraceIndexFromMillis(millisPosition);
+        if(!hasBeatTrace)
+            hasBeatTrace = true;
+        if(value == 0)
+            beatTrace[index] = 0;
+        else
+            beatTrace[index] = (value | beatTrace[index]);
+    }
+
+    public int getBeatTrace(Long millisPosition){
+        int index = getBeatTraceIndexFromMillis(millisPosition);
+        return beatTrace[index];
+    }
+
+    public boolean hasBeatTrace(){
+        return hasBeatTrace;
+    }
+
+    public int[] getBeatTrace() {
+        return beatTrace;
     }
 
     public FileHandle getOggTarget() {

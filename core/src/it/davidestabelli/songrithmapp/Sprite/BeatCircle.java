@@ -1,5 +1,6 @@
 package it.davidestabelli.songrithmapp.Sprite;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -11,15 +12,20 @@ public class BeatCircle{
     public static final float END_ANIMATION_CIRCLE_RADIUS = 10;
     public static final float ANIMATION_RADIUS_DELTA = 200;
 
-    private Texture texture;
+    private Texture outerTexture;
+    private Texture innerTexture;
     private Vector2 position;
+
+    public boolean active;
 
     private float radius;
 
-    public BeatCircle(Vector2 position){
-        this.texture = new Texture("Circle_(transparent).png");
+    public BeatCircle(Vector2 position, float radius){
+        this.outerTexture = new Texture("outer_circle.png");
+        this.innerTexture = new Texture("inner_circle.png");
         this.position = position;
-        this.radius = CIRCLE_RADIUS;
+        this.radius = radius;
+        this.active = false;
     }
 
     public boolean doAnimation(float dt){
@@ -33,14 +39,23 @@ public class BeatCircle{
     }
 
     public void draw(SpriteBatch batch){
-        batch.draw(texture,
-                (position.x / MainGame.V_WIDTH) - (radius / MainGame.V_WIDTH)/2,
-                (position.y / MainGame.V_HEIGHT) - (radius / MainGame.V_HEIGHT)/2,
-                radius / MainGame.V_WIDTH,
-                radius / MainGame.V_HEIGHT);
+        if(active){
+            batch.draw(innerTexture,
+                    position.x - radius/2,
+                    position.y - radius/2,
+                    radius,
+                    radius);
+        } else {
+            batch.draw(outerTexture,
+                    position.x - radius/2,
+                    position.y - radius/2,
+                    radius,
+                    radius);
+        }
     }
 
     public void dispose(){
-        texture.dispose();
+        innerTexture.dispose();
+        outerTexture.dispose();
     }
 }
