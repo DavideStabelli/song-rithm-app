@@ -29,7 +29,12 @@ import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
 import com.kotcrab.vis.ui.widget.file.FileTypeFilter;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 import it.davidestabelli.songrithmapp.Helper.YouTubeDownlod;
 import it.davidestabelli.songrithmapp.MainGame;
@@ -38,6 +43,7 @@ import it.davidestabelli.songrithmapp.Helper.MusicConverter;
 import it.davidestabelli.songrithmapp.Sprite.ImportedFileList;
 
 public class MenuScreen implements Screen {
+    private static final float CLIPBOARD_CHECK_INTERVAL = 1f;
 
     public MainGame game;
 
@@ -55,6 +61,7 @@ public class MenuScreen implements Screen {
     VisLabel downloadProgressPercentage;
     YouTubeDownlod ytVideo;
     VisProgressBar downloadProgressBar;
+    private float clipboardCheckTime;
 
     FileChooser fileChooser;
 
@@ -78,9 +85,12 @@ public class MenuScreen implements Screen {
         // start button
         startButton = new VisTextButton("Riproduci Brano");
         startButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {                
-                dispose();
-                game.setScreen(new MusicPlayerScreen(game, importedFileList.getSelectedMusicFile()));
+            public void clicked(InputEvent event, float x, float y) {
+                MusicConverter music = importedFileList.getSelectedMusicFile();
+                if(music != null) {
+                    dispose();
+                    game.setScreen(new MusicPlayerScreen(game, importedFileList.getSelectedMusicFile()));
+                }
             }
         });
         startButton.setSize((Gdx.graphics.getWidth() / 6), (Gdx.graphics.getHeight() / 8));
@@ -146,6 +156,7 @@ public class MenuScreen implements Screen {
         linkInfo = new VisLabel(". . .");
         importFromUrlPopUp.row();
         importFromUrlPopUp.add(linkInfo).expand().fill();
+        clipboardCheckTime = 0;
 
         // import from URL
         importFromUrlButton = new VisTextButton("Importa Da URL");
@@ -179,24 +190,43 @@ public class MenuScreen implements Screen {
         handleInput(dt);
 
         // yt download managment
-        if(importFromUrlPopUp != null && ytVideo != null){
-            if(ytVideo.isDownloading) {
-                downloadProgressBar.setValue(ytVideo.downloadProgress);
-                downloadProgressPercentage.setText(String.format("%d%%",ytVideo.downloadProgress));
-                linkInfo.setText(ytVideo.videoInfoString);
-                downloadButton.setDisabled(true);
-                urlTextField.setDisabled(true);
-            }
-            else {
-                importedFileList.updateVoices();
+        if(importFromUrlPopUp != null){
+            if(ytVideo != null) {
+                if (ytVideo.isDownloading) {
+                    downloadProgressBar.setValue(ytVideo.downloadProgress);
+                    downloadProgressPercentage.setText(String.format("%d%%", ytVideo.downloadProgress));
+                    linkInfo.setText(ytVideo.videoInfoString);
+                    downloadButton.setDisabled(true);
+                    urlTextField.setDisabled(true);
+                } else {
+                    importedFileList.updateVoices();
 
-                importFromUrlPopUp.removeActor(downloadProgressBar);
-                importFromUrlPopUp.fadeOut();
+                    importFromUrlPopUp.removeActor(downloadProgressBar);
+                    importFromUrlPopUp.fadeOut();
 
-                downloadButton.setDisabled(false);
-                urlTextField.setDisabled(false);
+                    downloadButton.setDisabled(false);
+                    urlTextField.setDisabled(false);
 
-                ytVideo = null;
+                    ytVideo = null;
+                }
+            } else {
+                clipboardCheckTime += dt;
+                if (clipboardCheckTime >= CLIPBOARD_CHECK_INTERVAL) {
+                    clipboardCheckTime = 0;
+                    try {
+                        String clipboardData = (String) Toolkit.getDefaultToolkit()
+                                .getSystemClipboard().getData(DataFlavor.stringFlavor);
+
+                        if (clipboardData != null) {
+                            new URL(clipboardData);
+                            String[] splittedBySlash = clipboardData.split("/");
+                            String[] splittedByEqual = splittedBySlash[splittedBySlash.length - 1].split("=");
+                            if(splittedByEqual[0].equals(YouTubeDownlod.YOUTUBE_URL_WATCH))
+                                urlTextField.setText(clipboardData);
+                        }
+                    } catch (Exception e) {
+                    }
+                }
             }
         }
 

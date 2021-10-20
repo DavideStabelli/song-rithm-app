@@ -1,8 +1,10 @@
 package it.davidestabelli.songrithmapp.Sprite;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Group;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.kotcrab.vis.ui.widget.VisImage;
@@ -15,9 +17,8 @@ import it.davidestabelli.songrithmapp.Helper.MusicConverter;
 import it.davidestabelli.songrithmapp.Screens.MusicPlayerScreen;
 
 public class BeatSlider extends VisSlider {
-    private static final int DEFAULT_TAG_WIDTH = 40;
+    private static final int DEFAULT_TAG_WIDTH = 20;
     private static final int DEFAULT_TAG_HEIGHT = 100;
-    private static final int DEFAULT_TAG_IN_SCREEN = 10;
 
     private Texture tagTexture;
     private Texture tagUpTexture;
@@ -46,7 +47,7 @@ public class BeatSlider extends VisSlider {
         tagCursor = new VisImage(tagCursorTexture);
         tagCursor.setSize(tagCursorTexture.getWidth(), tagCursorTexture.getHeight());
         tagSelection = new VisImage(tagSelectionTexture);
-        tagSelection.setSize(tagSelectionTexture.getWidth(), tagSelectionTexture.getHeight());
+        tagSelection.setSize(DEFAULT_TAG_WIDTH, tagSelectionTexture.getHeight());
         
         tagList = new Group();
         editMode = false;
@@ -54,7 +55,7 @@ public class BeatSlider extends VisSlider {
         stage.addActor(this);
     }
 
-    public void updateTags(MusicConverter music){
+    public void updateTags(final MusicConverter music, final Music musicFile){
         tagList.clearChildren();
         if(editMode) {
             tagList.setPosition(0, getY() + getHeight() + 20);
@@ -63,7 +64,17 @@ public class BeatSlider extends VisSlider {
 
             for (int i = 0; i < music.getBeatTrace().length; i++) {
                 int beatTrace = music.getBeatTrace()[i];
-                tagList.addActor(new BeatSliderTag(i, beatTrace));
+                tagList.addActor(new BeatSliderTag(i, beatTrace, new ClickListener() {
+                    public void clicked(InputEvent event, float x, float y) {
+                        musicFile.pause();
+                        BeatSliderTag tag = (BeatSliderTag)event.getListenerActor();
+                        System.out.println(tag.sliderIndex);
+                        System.out.println(music.getMillisFromBeatTraceIndex(tag.getSliderIndex()));
+                        long millis = music.getMillisFromBeatTraceIndex(tag.getSliderIndex());
+                        setValue(millis);
+                        musicFile.setPosition(millis / 1000f);
+                    }
+                }));
                 /*
                 if ((beatTrace & MusicPlayerScreen.LEFT_BEAT) == MusicPlayerScreen.LEFT_BEAT)
                     tagList.addActor(new BeatSliderTag(this, music.getMillisFromBeatTraceIndex(i) / 1000, true));
@@ -79,31 +90,32 @@ public class BeatSlider extends VisSlider {
 
     }
 
-    /*
-    public void addTag(float position, boolean isLeft){
-        tagList.addActor(new BeatSliderTag(this, position, isLeft));
-    }
-    */
-
     public void update(MusicConverter music, Long millisPosition, float dt){
-        float cursorX = (getValue() / (getMaxValue() - getMinValue())) * (DEFAULT_TAG_WIDTH * music.getBeatTrace().length);
+        long sliderValueMillis = Math.round(getValue());
+        //float cursorX = (millisPosition.floatValue() / music.getDuration().floatValue()) * (DEFAULT_TAG_WIDTH * music.getBeatTrace().length);
+        float cursorX = (sliderValueMillis / (getMaxValue() - getMinValue())) * (DEFAULT_TAG_WIDTH * music.getBeatTrace().length) ;
         tagCursor.setPosition(cursorX, 0);
-        int index = music.getBeatTraceIndexFromMillis(millisPosition);
+        //long index = music.getBeatTraceIndexFromMillis(millisPosition);
+        long index = music.getBeatTraceIndexFromMillis(sliderValueMillis);
         tagSelection.setPosition(index * DEFAULT_TAG_WIDTH, 0);
 
-        boolean isCursorOverHalfScreen = tagCursor.getX() + tagList.getX() >= (Gdx.graphics.getWidth() / 2);
-        boolean isRollOverScreen = (tagList.getX() + (DEFAULT_TAG_WIDTH * music.getBeatTrace().length)) > Gdx.graphics.getWidth();
+        boolean isCursorOverHalfScreen = tagCursor.getX() + tagList.getX() >= (Gdx.graphics.getWidth() / 6) * 5;
+        boolean isRollOverScreen = (tagList.getX() + (DEFAULT_TAG_WIDTH * music.getBeatTrace().length)) >= Gdx.graphics.getWidth();
         
         if(isCursorOverHalfScreen && isRollOverScreen){
-            tagList.setX((Gdx.graphics.getWidth() / 2) - tagCursor.getX());
+            tagList.setX((Gdx.graphics.getWidth() / 6) * 5 - tagCursor.getX());
         }
+        if((tagList.getX() + (DEFAULT_TAG_WIDTH * music.getBeatTrace().length)) < Gdx.graphics.getWidth())
+            tagList.setX(Gdx.graphics.getWidth() - (DEFAULT_TAG_WIDTH * music.getBeatTrace().length));
 
-        boolean isCursorBeforeScreen = tagCursor.getX() + tagList.getX() <= 0;
-        boolean isRollInScreen = tagList.getX() < 0;
+        boolean isCursorBeforeScreen = tagCursor.getX() + tagList.getX() <= (Gdx.graphics.getWidth() / 6);
+        boolean isRollInScreen = tagList.getX() <= 0;
 
         if(isCursorBeforeScreen && isRollInScreen){
-            tagList.setX(-tagCursor.getX());
+            tagList.setX((Gdx.graphics.getWidth() / 6) - tagCursor.getX());
         }
+        if(tagList.getX() > 0)
+            tagList.setX(0);
     }
 
     public void setEditMode(boolean editMode){
@@ -111,10 +123,10 @@ public class BeatSlider extends VisSlider {
     }
 
     private class BeatSliderTag extends VisImage {
-        private float sliderIndex;
+        private int sliderIndex;
         private int beatValue; // if its up or down the slider
 
-        public BeatSliderTag(float sliderIndex, int beatValue){
+        public BeatSliderTag(int sliderIndex, int beatValue, ClickListener callback){
             if((beatValue & (MusicPlayerScreen.LEFT_BEAT | MusicPlayerScreen.RIGHT_BEAT)) == (MusicPlayerScreen.LEFT_BEAT | MusicPlayerScreen.RIGHT_BEAT))
                 setDrawable(tagDoubleTexture);
             else if ((beatValue & MusicPlayerScreen.LEFT_BEAT) == MusicPlayerScreen.LEFT_BEAT)
@@ -129,24 +141,12 @@ public class BeatSlider extends VisSlider {
             this.setSize(DEFAULT_TAG_WIDTH, DEFAULT_TAG_HEIGHT);
             this.setY(0);
             this.setX(sliderIndex * DEFAULT_TAG_WIDTH);
-        }
 
-        /*
-        public BeatSliderTag(BeatSlider parentSlider,float sliderPosition, boolean upTheSlider, ClickListener callback){
-            this.sliderPosition = sliderPosition;
-            this.upTheSlider = upTheSlider;
-            this.setSize(DEFAULT_TAG_SIZE, DEFAULT_TAG_SIZE);
-            this.parentSlider = parentSlider;
-            if(upTheSlider)
-                this.setY(parentSlider.getY() + parentSlider.getHeight());
-            else
-                this.setY(parentSlider.getY() - getHeight());
-
-            float relativeXPosition = (sliderPosition / (parentSlider.getMaxValue() - parentSlider.getMinValue())) * parentSlider.getWidth();
-
-            setX(relativeXPosition + parentSlider.getX());
             this.addListener(callback);
         }
-        */
+
+        public int getSliderIndex() {
+            return sliderIndex;
+        }
     }
 }

@@ -14,9 +14,14 @@ import com.github.kiulian.downloader.model.videos.formats.Format;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.text.NumberFormat;
+import java.time.LocalTime;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 
 public class YouTubeDownlod {
+    public static final String YOUTUBE_URL_WATCH = "watch?v";
+
     private String url;
     private String videoId;
 
@@ -46,7 +51,9 @@ public class YouTubeDownlod {
     public void downloadAudio(){
         isDownloading = true;
         VideoInfo info = requestVideoInfo();
-        videoInfoString = String.format("%s \n %d views", info.details().title(), info.details().viewCount());
+        String duration = LocalTime.ofSecondOfDay(info.details().lengthSeconds()).format(MusicConverter.AUDIO_FORMAT);
+        String viewCount = NumberFormat.getIntegerInstance(Locale.ITALY).format(info.details().viewCount()),
+        videoInfoString = String.format("%s \n %s | %s views", info.details().title(), duration, viewCount);
         File outputDir = new File(ImportedFileHandler.FOLDER_PATH);
         Format format = info.bestAudioFormat();
         downloadProgress = 0;

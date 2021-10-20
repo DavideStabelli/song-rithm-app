@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.nio.file.Files;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,13 +23,18 @@ import ws.schild.jave.encode.EncodingAttributes;
 
 public class MusicConverter {
     private static final int NUMBER_OF_SPECTRUMS = 19;
-    private static final float BEAT_TRACE_SAMPLE = 0.2f;
+    private static final float BEAT_TRACE_SAMPLE = 0.11f;
+    public static final DateTimeFormatter AUDIO_FORMAT = DateTimeFormatter.ofPattern("mm:ss");
 
     private File source;		                 
     private File oggTarget;
     private File wavTarget;
 
     private Long duration; // millis
+
+    private String stringedDuration;
+    private float secondsDuration;
+
     private String sourceFormat;
     private String fileName;
 
@@ -35,6 +42,8 @@ public class MusicConverter {
 
     private boolean hasBeatTrace;
     private int[] beatTrace;
+    private double beatTraceDurationRatio;
+    private double durationBeatTraceRatio;
 
     public MusicConverter(String oggPath, String wavPath, Map<String,Object> spectrumListMap, int[] beatTrace, String name) throws EncoderException {
         this.oggTarget = new File(oggPath);
@@ -53,6 +62,9 @@ public class MusicConverter {
         //Getting infos
         MultimediaObject sourceObject = new MultimediaObject(oggTarget);
         duration = sourceObject.getInfo().getDuration();
+        secondsDuration = duration / 1000;
+        stringedDuration = LocalTime.ofSecondOfDay(Math.round(secondsDuration)).format(AUDIO_FORMAT);
+
         sourceFormat = sourceObject.getInfo().getFormat();
         fileName = name;
 
@@ -67,6 +79,9 @@ public class MusicConverter {
             this.beatTrace = beatTrace;
             this.hasBeatTrace = true;
         }
+
+        beatTraceDurationRatio = this.beatTrace.length / duration.doubleValue();
+        durationBeatTraceRatio = duration.doubleValue() / this.beatTrace.length;
     }
 
     public MusicConverter(File toConvert) {
@@ -102,10 +117,10 @@ public class MusicConverter {
             if(!sourceFormat.equals("ogg")){            
                 //Audio Attributes                                       
                 AudioAttributes audio = new AudioAttributes();              
-                audio.setCodec("libvorbis");                               
-                audio.setBitRate(128000);                                   
-                audio.setChannels(2);                                       
-                audio.setSamplingRate(44100);                         
+                audio.setCodec("libvorbis");
+                audio.setChannels(2);
+                float samplingRate = (40960/ (BEAT_TRACE_SAMPLE * 2 * 2)) * 2;
+                audio.setSamplingRate(Math.round(samplingRate));
                                                                             
                 //Encoding attributes                                       
                 EncodingAttributes attrs = new EncodingAttributes();        
@@ -125,19 +140,9 @@ public class MusicConverter {
 
             float[] samples = new float[1024];
             float[] spectrum = new float[1024 / 2 + 1];
-            //float[] lastSpectrum = new float[1024 / 2 + 1];
-            //spectralFlux = new ArrayList<Float>();
             spectrumList = new List[NUMBER_OF_SPECTRUMS];
 
             while (decoder.readSamples(samples) > 0) {
-               /* fft.forward(samples);
-                System.arraycopy(spectrum, 0, lastSpectrum, 0, spectrum.length);
-                System.arraycopy(fft.getSpectrum(), 0, spectrum, 0, spectrum.length);
-
-                float flux = 0;
-                for (int i = 0; i < spectrum.length; i++)
-                    flux += (spectrum[i] - lastSpectrum[i]);
-                spectralFlux.add(flux);*/
 
                 fft.forward(samples);
                 spectrum = fft.getSpectrum();
@@ -154,7 +159,6 @@ public class MusicConverter {
                 }
             }
 
-            //System.out.println("there are " + spectralFlux.size() + " samples");
         } catch (Exception ex) {                                      
             ex.printStackTrace();                                       
             oggTarget = null;   
@@ -162,29 +166,50 @@ public class MusicConverter {
         }
     }
 
-    public int getBeatTraceIndexFromMillis(Long millisPosition){
-        int index = 0;
-        index = Math.round((millisPosition * beatTrace.length) / duration);
+    public long getBeatTraceIndexFromMillis(float millisPosition){
+        long index = 0;
+        double doubleIndex = millisPosition * beatTraceDurationRatio;
+        doubleIndex = Math.floor(doubleIndex);
+        index = Math.round(doubleIndex);
+        if(index >= beatTrace.length)
+            index = beatTrace.length - 1;
         return index;
     }
 
-    public int getMillisFromBeatTraceIndex(int index){
-        return Math.round(index * BEAT_TRACE_SAMPLE * 1000);
+    public long getMillisFromBeatTraceIndex(int index){
+        double rawMillis = (index * durationBeatTraceRatio) + BEAT_TRACE_SAMPLE*500;
+
+        return Math.round(rawMillis);
     }
 
-    public void setBeatTrace(Long millisPosition, int value){
-        int index = getBeatTraceIndexFromMillis(millisPosition);
+    public void setBeatTrace(float millisPosition, int value){
+        Long index = getBeatTraceIndexFromMillis(millisPosition);
         if(!hasBeatTrace)
             hasBeatTrace = true;
         if(value == 0)
-            beatTrace[index] = 0;
+            beatTrace[index.intValue()] = 0;
         else
-            beatTrace[index] = (value | beatTrace[index]);
+            beatTrace[index.intValue()] = (value | beatTrace[index.intValue()]);
     }
 
-    public int getBeatTrace(Long millisPosition){
-        int index = getBeatTraceIndexFromMillis(millisPosition);
-        return beatTrace[index];
+    public int getBeatTrace(float millisPosition){
+        Long index = getBeatTraceIndexFromMillis(millisPosition);
+        return beatTrace[index.intValue()];
+    }
+
+    public void clearBeatTrace(){
+        for (int i = 0; i < beatTrace.length; i++) {
+            beatTrace[i] = 0;
+        }
+        hasBeatTrace = false;
+    }
+
+    public String getStringedDuration() {
+        return stringedDuration;
+    }
+
+    public float getSecondsDuration() {
+        return secondsDuration;
     }
 
     public boolean hasBeatTrace(){

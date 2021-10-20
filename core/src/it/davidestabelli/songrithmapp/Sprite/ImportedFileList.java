@@ -86,11 +86,11 @@ public class ImportedFileList extends VisWindow {
     }
 
     public MusicConverter getSelectedMusicFile(){
-        Optional optionalValue = Optional.of(tree.getSelectedValue());
-        if(!optionalValue.isPresent())
+        Object optionalValue = tree.getSelectedValue();
+        if(optionalValue == null)
             return null;
         else{            
-            return ImportedFileHandler.getMusicFileFromImport((String)optionalValue.get());
+            return ImportedFileHandler.getMusicFileFromImport((String)optionalValue);
         }
     }
 
