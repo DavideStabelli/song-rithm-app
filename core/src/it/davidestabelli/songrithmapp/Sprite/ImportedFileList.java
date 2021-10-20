@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 import com.badlogic.gdx.scenes.scene2d.ui.Tree;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
@@ -26,15 +28,14 @@ public class ImportedFileList extends VisWindow {
     private VisImage deleteButton;
 
     private Texture deleteButtonTexture;
-    private Texture deleteButtonOpenTexture;
 
-    public ImportedFileList() {
+    public ImportedFileList(Stage parentStage) {
 		super("LISTA DEI BRANI IMPORTATI");
 
         deleteButtonTexture = new Texture("trash_close.png");
-        deleteButtonOpenTexture = new Texture("trash_open.png");
         deleteButton = new VisImage(deleteButtonTexture);
-        deleteButton.setSize(20,20);
+        deleteButton.setSize(35, 35);
+        deleteButton.toFront();
         deleteButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 if(tree.getSelectedValue() != null) {
@@ -48,8 +49,8 @@ public class ImportedFileList extends VisWindow {
 		columnDefaults(0).left();
 
 		addAllVoices();
-		row();
-		add(deleteButton);
+        parentStage.addActor(this);
+        parentStage.addActor(deleteButton);
 	}
 
 	private void addAllVoices() {
@@ -69,6 +70,18 @@ public class ImportedFileList extends VisWindow {
             ImportedFile importedFile = new ImportedFile(new VisLabel(fileName));
             importedFile.setValue(fileName);
             tree.add(importedFile);
+        }
+    }
+
+    public void update(){
+        Tree.Node selectedNode = tree.getSelectedNode();
+        if(selectedNode != null){
+            deleteButton.setVisible(true);
+            float position = selectedNode.getActor().getY() - (deleteButton.getHeight() - selectedNode.getActor().getHeight()) / 2;
+            deleteButton.setY(position);
+            deleteButton.setX(tree.getX() + tree.getWidth());
+        } else {
+            deleteButton.setVisible(false);
         }
     }
 

@@ -76,8 +76,8 @@ public class MusicPlayerScreen implements Screen {
         pauseButtonTexture = new Texture("pause_button.png");
         backToMenuTexture = new Texture("back_button.png");
         background = new Texture("background.png");
-        recTexture = new Texture("play_button.png");
-        stopTexture = new Texture("pause_button.png");
+        recTexture = new Texture("rec_button.png");
+        stopTexture = new Texture("stop_button.png");
 
         // file path label
         fileLabel = new VisLabel("");
@@ -109,7 +109,6 @@ public class MusicPlayerScreen implements Screen {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 musicFile.setPosition(musicSlider.getValue());
-                musicFile.play();
                 super.touchUp(event, x, y, pointer, button);
             }
 
@@ -137,7 +136,7 @@ public class MusicPlayerScreen implements Screen {
                 }
             }
         });
-        recButton.setSize(40, 40);
+        recButton.setSize(50, 50);
         recButton.setPosition(Gdx.graphics.getWidth() - recButton.getWidth() - 20, Gdx.graphics.getHeight() - recButton.getHeight() - 20);
         stage.addActor(recButton);
         isRec = false;
@@ -155,7 +154,7 @@ public class MusicPlayerScreen implements Screen {
         stage.addActor(backToMenu);
 
         // beat bar
-        beatBars = new ArrayList<BeatBar>();
+        beatBars = new ArrayList<BeatBar>();  
         float barWidth = (Gdx.graphics.getWidth() / (music.getSpectrumList().length + 2));
         float barHeight = (Gdx.graphics.getHeight() / 3) * 2;
         for (int i = 0; i < music.getSpectrumList().length; i++) {
@@ -167,7 +166,7 @@ public class MusicPlayerScreen implements Screen {
             beatBar.setMaxValue(Collections.max(spectrum));
             beatBar.setMinValue(Collections.min(spectrum));
             beatBars.add(beatBar);
-        }
+        }      
         barRefreshTime = 0;
 
         // beat circles
@@ -178,18 +177,28 @@ public class MusicPlayerScreen implements Screen {
     }
 
     private void setStageActorsForPlay(){
+        leftBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/2));
+        rightBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4 * 3, Gdx.graphics.getHeight()/2));
+
         musicSlider.setWidth(Gdx.graphics.getWidth() / 1.5f);
         musicSlider.setPosition(Gdx.graphics.getWidth()/2 - musicSlider.getWidth()/2 , 20);
         musicSlider.setEditMode(false);
+        musicSlider.updateTags(music);
 
         fileLabel.setSize(40,20);
-        fileLabel.setPosition(musicSlider.getX() + musicSlider.getWidth() + 20, 20);
+        fileLabel.setPosition(musicSlider.getX() + musicSlider.getWidth() + 20, musicSlider.getY() - (fileLabel.getHeight() - musicSlider.getHeight()) / 2);
 
         playPauseButton.setSize(40, 40);
-        playPauseButton.setPosition(musicSlider.getX() - playPauseButton.getWidth() - 20, 20);
+        playPauseButton.setPosition(musicSlider.getX() - playPauseButton.getWidth() - 20, musicSlider.getY() - (playPauseButton.getHeight() - musicSlider.getHeight()) / 2);
+
+        for (BeatBar beatBar : beatBars) 
+            beatBar.setHidden(false);  
     }
 
     private void setStageActorsForEdit(){
+        leftBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/ 1.5f));
+        rightBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4 * 3, Gdx.graphics.getHeight()/1.5f));
+
         fileLabel.setSize(60,30);
         fileLabel.setPosition((Gdx.graphics.getWidth()/2) - fileLabel.getWidth()/2, 20);
 
@@ -199,6 +208,10 @@ public class MusicPlayerScreen implements Screen {
         musicSlider.setWidth(Gdx.graphics.getWidth() - 10);
         musicSlider.setPosition(5 , playPauseButton.getHeight() + playPauseButton.getY() + 20);
         musicSlider.setEditMode(true);
+        musicSlider.updateTags(music);
+
+        for (BeatBar beatBar : beatBars) 
+            beatBar.setHidden(true);        
     }
 
     @Override
@@ -276,6 +289,11 @@ public class MusicPlayerScreen implements Screen {
                 music.setBeatTrace(millisPosition, 0);
                 musicSlider.updateTags(music);
             }
+        }
+
+        // slider zoom update
+        if(isRec){
+            musicSlider.update(music, millisPosition, dt);
         }
 
         // set beat cirle activation

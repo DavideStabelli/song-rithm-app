@@ -21,6 +21,7 @@ public class BeatBar {
     private float maxValue;
     private float minValue;
     private float actualValue;
+    private boolean hidden;
 
     public BeatBar(float x, float y, float width, float height) {
         this.size = new Vector2(width,height);
@@ -32,17 +33,20 @@ public class BeatBar {
         this.beatBlockSpace = DEFAULT_BEAT_BLOCK_SPACE;
         this.maxValue = DEFAULT_MAX_VALUE;
         this.minValue = DEFAULT_MIN_VALUE;
+        this.hidden = false;
     }
 
     public void draw(SpriteBatch batch){
-        float actualHeight = ((actualValue - minValue) * size.y) / (maxValue - minValue);
-        int blockToDraw = Math.round(actualHeight / (beatBlockHeight + beatBlockSpace));
+        if(!hidden){
+            float actualHeight = ((actualValue - minValue) * size.y) / (maxValue - minValue);
+            int blockToDraw = Math.round(actualHeight / (beatBlockHeight + beatBlockSpace));
 
-        for(int i = 0; i < blockToDraw; i++){
-            float blockYPosition = positon.y + (i * (beatBlockHeight + beatBlockSpace));
-            batch.draw(beatBlockTexture, positon.x, blockYPosition, size.x, beatBlockHeight);
+            for(int i = 0; i < blockToDraw; i++){
+                float blockYPosition = positon.y + (i * (beatBlockHeight + beatBlockSpace));
+                batch.draw(beatBlockTexture, positon.x, blockYPosition, size.x, beatBlockHeight);
+            }
         }
-    }
+    }    
 
     public void setBeatBlockHeight(float beatBlockHeight) {
         this.beatBlockHeight = beatBlockHeight;
@@ -62,5 +66,25 @@ public class BeatBar {
 
     public void setMinValue(float minValue) {
         this.minValue = minValue;
+    }
+
+    public Vector2 getSize() {
+        return size;
+    }
+
+    public void setSize(Vector2 size) {
+        this.size = size;
+    }
+
+    public Vector2 getPositon() {
+        return positon;
+    }
+
+    public void setPositon(Vector2 positon) {
+        this.positon = positon;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 }

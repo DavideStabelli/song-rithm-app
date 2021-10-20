@@ -160,12 +160,11 @@ public class MenuScreen implements Screen {
         stage.addActor(importFromUrlButton);
 
         // file list
-        importedFileList = new ImportedFileList();
+        importedFileList = new ImportedFileList(stage);
         importedFileList.setSize((Gdx.graphics.getWidth() / 2), Gdx.graphics.getHeight());
         importedFileList.setPosition(0, 0);
         importedFileList.setMovable(false);
         importedFileList.setResizable(false);
-        stage.addActor(importedFileList);
     }
 
     @Override
@@ -199,6 +198,10 @@ public class MenuScreen implements Screen {
 
                 ytVideo = null;
             }
+        }
+
+        if(importedFileList != null){
+            importedFileList.update();
         }
     }
 

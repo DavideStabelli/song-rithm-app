@@ -58,4 +58,12 @@ public class BeatCircle{
         innerTexture.dispose();
         outerTexture.dispose();
     }
+
+    public Vector2 getPosition() {
+        return position;
+    }
+
+    public void setPosition(Vector2 position) {
+        this.position = position;
+    }
 }
