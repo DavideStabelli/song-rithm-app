@@ -2,6 +2,7 @@ package it.davidestabelli.songrithmapp.Sprite;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
@@ -15,8 +16,9 @@ public class BeatCircle{
     private Texture outerTexture;
     private Texture innerTexture;
     private Vector2 position;
+    private ParticleEffect effect;
 
-    public boolean active;
+    private boolean active;
 
     private float radius;
 
@@ -26,6 +28,9 @@ public class BeatCircle{
         this.position = position;
         this.radius = radius;
         this.active = false;
+        this.effect = new ParticleEffect();
+        effect.load(Gdx.files.internal("circle_hit_particles"), Gdx.files.internal(""));
+        effect.getEmitters().first().setPosition(position.x,position.y);
     }
 
     public boolean doAnimation(float dt){
@@ -38,7 +43,11 @@ public class BeatCircle{
         }
     }
 
-    public void draw(SpriteBatch batch){
+    public void update(float dt){
+        effect.update(dt);
+    }
+
+    public void draw(SpriteBatch batch, boolean isRec){
         if(active){
             batch.draw(innerTexture,
                     position.x - radius/2,
@@ -52,11 +61,19 @@ public class BeatCircle{
                     radius,
                     radius);
         }
+        if(!isRec)
+            effect.draw(batch);
     }
 
     public void dispose(){
         innerTexture.dispose();
         outerTexture.dispose();
+    }
+
+    public void setActive(boolean active) {
+        if(active && !this.active)
+            effect.start();
+        this.active = active;
     }
 
     public Vector2 getPosition() {
@@ -65,5 +82,6 @@ public class BeatCircle{
 
     public void setPosition(Vector2 position) {
         this.position = position;
+        effect.getEmitters().first().setPosition(position.x,position.y);
     }
 }

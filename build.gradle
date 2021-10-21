@@ -92,6 +92,7 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
         api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-tools:$gdxVersion"
         compile "com.kotcrab.vis:vis-ui:$visuiVersion"
         compile group: 'ws.schild', name: 'jave-all-deps', version: '3.2.0'
         implementation 'com.github.sealedtx:java-youtube-downloader:3.0.1'

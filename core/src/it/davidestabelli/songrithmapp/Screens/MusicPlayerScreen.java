@@ -326,14 +326,19 @@ public class MusicPlayerScreen implements Screen {
         // set beat cirle activation
         int beatTrace = music.getBeatTrace(musicSlider.getValue());
         if((beatTrace & LEFT_BEAT) == LEFT_BEAT)
-            leftBeatCircle.active = true;
+            leftBeatCircle.setActive(true);
         else
-            leftBeatCircle.active = false;
+            leftBeatCircle.setActive(false);
 
         if((beatTrace & RIGHT_BEAT) == RIGHT_BEAT)
-            rightBeatCircle.active = true;
+            rightBeatCircle.setActive(true);
         else
-            rightBeatCircle.active = false;
+            rightBeatCircle.setActive(false);
+
+        if(!isRec){
+            leftBeatCircle.update(dt);
+            rightBeatCircle.update(dt);
+        }
     }
 
     @Override
@@ -349,8 +354,8 @@ public class MusicPlayerScreen implements Screen {
             for (BeatBar beatBar : beatBars)
                 beatBar.draw(game.batch);
 
-        leftBeatCircle.draw(game.batch);
-        rightBeatCircle.draw(game.batch);
+        leftBeatCircle.draw(game.batch, isRec);
+        rightBeatCircle.draw(game.batch, isRec);
         game.batch.end();
         stage.act();
         stage.draw();
