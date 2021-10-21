@@ -190,26 +190,24 @@ public class MenuScreen implements Screen {
         handleInput(dt);
 
         // yt download managment
-        if(importFromUrlPopUp != null){
-            if(ytVideo != null) {
-                if (ytVideo.isDownloading) {
-                    downloadProgressBar.setValue(ytVideo.downloadProgress);
-                    downloadProgressPercentage.setText(String.format("%d%%", ytVideo.downloadProgress));
-                    linkInfo.setText(ytVideo.videoInfoString);
-                    downloadButton.setDisabled(true);
-                    urlTextField.setDisabled(true);
-                } else {
-                    importedFileList.updateVoices();
+        if(importFromUrlPopUp != null && ytVideo != null){
+            if (ytVideo.downloadingState == YouTubeDownlod.DOWNLOAD_IN_PROGRESS) {
+                downloadProgressBar.setValue(ytVideo.downloadProgress);
+                downloadProgressPercentage.setText(String.format("%d%%", ytVideo.downloadProgress));
+                linkInfo.setText(ytVideo.videoInfoString);
+                downloadButton.setDisabled(true);
+                urlTextField.setDisabled(true);
+            } else if(ytVideo.downloadingState == YouTubeDownlod.DOWNLOAD_FINISHED){
+                importedFileList.updateVoices();
 
-                    importFromUrlPopUp.removeActor(downloadProgressBar);
-                    importFromUrlPopUp.fadeOut();
+                importFromUrlPopUp.removeActor(downloadProgressBar);
+                importFromUrlPopUp.fadeOut();
 
-                    downloadButton.setDisabled(false);
-                    urlTextField.setDisabled(false);
+                downloadButton.setDisabled(false);
+                urlTextField.setDisabled(false);
 
-                    ytVideo = null;
-                }
-            } else {
+                ytVideo = null;
+            } else {          
                 clipboardCheckTime += dt;
                 if (clipboardCheckTime >= CLIPBOARD_CHECK_INTERVAL) {
                     clipboardCheckTime = 0;
@@ -226,7 +224,7 @@ public class MenuScreen implements Screen {
                         }
                     } catch (Exception e) {
                     }
-                }
+                }            
             }
         }
 

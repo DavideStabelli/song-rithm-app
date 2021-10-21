@@ -45,9 +45,9 @@ public class MusicConverter {
     private double beatTraceDurationRatio;
     private double durationBeatTraceRatio;
 
-    public MusicConverter(String oggPath, String wavPath, Map<String,Object> spectrumListMap, int[] beatTrace, String name) throws EncoderException {
+    public MusicConverter(String oggPath, Map<String,Object> spectrumListMap, int[] beatTrace, String name) throws EncoderException {
         this.oggTarget = new File(oggPath);
-        this.wavTarget = new File(wavPath);
+        //this.wavTarget = new File(wavPath);
         spectrumList = new List[NUMBER_OF_SPECTRUMS];
         for (int i = 0; i < spectrumList.length; i++) {
             JSONArray mapArray = (JSONArray)spectrumListMap.get(String.format("%d",i));
@@ -158,6 +158,8 @@ public class MusicConverter {
                     spectrumList[i].add(spectrumValueSum);                    
                 }
             }
+
+            wavTarget.delete();
 
         } catch (Exception ex) {                                      
             ex.printStackTrace();                                       

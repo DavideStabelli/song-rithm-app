@@ -21,16 +21,22 @@ import java.util.concurrent.Executors;
 
 public class YouTubeDownlod {
     public static final String YOUTUBE_URL_WATCH = "watch?v";
+    public static final int DOWNLOAD_WAITING = 0;
+    public static final int DOWNLOAD_IN_PROGRESS = 1;
+    public static final int DOWNLOAD_FINISHED = 2;
+    public static final int DOWNLOAD_FINISHED_WITH_ERROR = 3;
 
     private String url;
     private String videoId;
 
     public String videoInfoString;
+    private String videoTitle;
+    private Format format;
 
     private YoutubeDownloader downloader;
 
     public int downloadProgress;
-    public boolean isDownloading;
+    public int downloadingState;
 
     public YouTubeDownlod (String url){
         this.url = url;
@@ -38,8 +44,18 @@ public class YouTubeDownlod {
         String[] splittetUrl = url.split("=");
         this.videoId = splittetUrl[splittetUrl.length - 1];
 
+        downloadingState = DOWNLOAD_WAITING;
+
         // init downloader with default config
         this.downloader = new YoutubeDownloader();
+
+        VideoInfo info = requestVideoInfo();
+        this.videoTitle = info.details().title();
+        String duration = LocalTime.ofSecondOfDay(info.details().lengthSeconds()).format(MusicConverter.AUDIO_FORMAT);
+        String viewCount = NumberFormat.getIntegerInstance(Locale.ITALY).format(info.details().viewCount());
+        this.videoInfoString = String.format("%s \n %s | %s views", videoTitle, duration, viewCount);
+
+        format = info.bestAudioFormat();
     }
 
     public VideoInfo requestVideoInfo(){
@@ -49,17 +65,12 @@ public class YouTubeDownlod {
     }
 
     public void downloadAudio(){
-        isDownloading = true;
-        VideoInfo info = requestVideoInfo();
-        String duration = LocalTime.ofSecondOfDay(info.details().lengthSeconds()).format(MusicConverter.AUDIO_FORMAT);
-        String viewCount = NumberFormat.getIntegerInstance(Locale.ITALY).format(info.details().viewCount()),
-        videoInfoString = String.format("%s \n %s | %s views", info.details().title(), duration, viewCount);
+        this.downloadingState = DOWNLOAD_IN_PROGRESS;
         File outputDir = new File(ImportedFileHandler.FOLDER_PATH);
-        Format format = info.bestAudioFormat();
-        downloadProgress = 0;
+        this.downloadProgress = 0;
         RequestVideoFileDownload request = new RequestVideoFileDownload(format)
                 .saveTo(outputDir)
-                .renameTo(info.details().title())
+                .renameTo(this.videoTitle)
                 .overwriteIfExists(true)
                 .callback(new YoutubeProgressCallback<File>() {
                     @Override
@@ -73,13 +84,13 @@ public class YouTubeDownlod {
                         MusicConverter musicConverter = new MusicConverter(videoInfo);
                         ImportedFileHandler.importNewFile(musicConverter);
                         videoInfo.delete();
-                        isDownloading = false;
+                        downloadingState = DOWNLOAD_FINISHED;
                     }
 
                     @Override
                     public void onError(Throwable throwable) {
                         System.out.println("Error: " + throwable.getLocalizedMessage());
-                        isDownloading = false;
+                        downloadingState = DOWNLOAD_FINISHED;
                     }
                 })
                 .async();

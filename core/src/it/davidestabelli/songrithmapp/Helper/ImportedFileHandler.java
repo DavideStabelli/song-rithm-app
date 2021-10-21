@@ -41,18 +41,19 @@ public class ImportedFileHandler {
             if(!musicElaboratedFile.getOggTarget().path().equals(oggLocalFile.getPath()))
                 Files.copy(musicElaboratedFile.getOggTarget().file().toPath(), oggLocalFile.toPath());
 
+                /*
             String wavFilePathString = localPathString + "/" + musicElaboratedFile.getFileName() + ".wav";
             File wavLocalFile = new File(wavFilePathString);
             if(!musicElaboratedFile.getWavTarget().path().equals(wavLocalFile.getPath()))
                 Files.copy(musicElaboratedFile.getWavTarget().file().toPath(), wavLocalFile.toPath());
-
+                */
             String dataFilePathString = localPathString + "/" + musicElaboratedFile.getFileName() + ".json";
             File dataLocalFile = new File(dataFilePathString);
             FileOutputStream outputStream = new FileOutputStream(dataLocalFile);
 
             Map<String,Object> fileContentMap = new HashMap<>();
             fileContentMap.put("oggPath", musicElaboratedFile.getOggTarget().path());
-            fileContentMap.put("wavPath", musicElaboratedFile.getWavTarget().path());
+            //fileContentMap.put("wavPath", musicElaboratedFile.getWavTarget().path());
             Map<String,Object> fileSpectrumListMap = new HashMap<>();
             for (int i = 0; i < musicElaboratedFile.getSpectrumList().length; i++) {
                 List<Float> singleSpectrumList = musicElaboratedFile.getSpectrumList()[i];
@@ -116,7 +117,7 @@ public class ImportedFileHandler {
             String content = new String ( Files.readAllBytes( Paths.get(filePath) ) );
             Map<String,Object> readedMap = JSONObject.parseObject(content).getInnerMap();
             String oggPath = (String) readedMap.get("oggPath");
-            String wavPath = (String) readedMap.get("wavPath");
+            //String wavPath = (String) readedMap.get("wavPath");
             Map spectrumListMap = (Map) readedMap.get("spectrumList");
             int[] beatTrace = null;
             if((boolean) readedMap.get("hasBeatTrace")) {
@@ -126,7 +127,7 @@ public class ImportedFileHandler {
                     beatTrace[i] = listArray.getInteger(i).intValue();
                 }
             }
-            return new MusicConverter(oggPath, wavPath, spectrumListMap, beatTrace, fileName);
+            return new MusicConverter(oggPath, spectrumListMap, beatTrace, fileName);
         }
         catch (Exception e)
         {
