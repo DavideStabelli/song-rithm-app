@@ -28,11 +28,13 @@ import it.davidestabelli.songrithmapp.MainGame;
 import it.davidestabelli.songrithmapp.Helper.MusicConverter;
 import it.davidestabelli.songrithmapp.Sprite.BeatBar;
 import it.davidestabelli.songrithmapp.Sprite.BeatCircle;
+import it.davidestabelli.songrithmapp.Sprite.BeatCircleAnimation;
 import it.davidestabelli.songrithmapp.Sprite.BeatSlider;
 
 public class MusicPlayerScreen implements Screen {
     public static final short RIGHT_BEAT = 1;
     public static final short LEFT_BEAT = 2;
+    public static final float FUTURE_BEAT_DELTA_TIME = 500;
 
     public MainGame game;
 
@@ -95,8 +97,12 @@ public class MusicPlayerScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 if (musicFile.isPlaying()) {
                     musicFile.pause();
+                    leftBeatCircle.setActivateEffect(false);
+                    rightBeatCircle.setActivateEffect(false);
                 } else {
                     musicFile.play();
+                    leftBeatCircle.setActivateEffect(true);
+                    rightBeatCircle.setActivateEffect(true);
                 }
             }
         });
@@ -114,6 +120,8 @@ public class MusicPlayerScreen implements Screen {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 musicFile.pause();
+                leftBeatCircle.setActivateEffect(false);
+                rightBeatCircle.setActivateEffect(false);
                 return super.touchDown(event, x, y, pointer, button);
             }
 
@@ -122,6 +130,8 @@ public class MusicPlayerScreen implements Screen {
                 musicFile.setPosition(musicSlider.getValue() / 1000);
                 if(!isRec)
                     musicFile.play();
+                leftBeatCircle.setActivateEffect(true);
+                rightBeatCircle.setActivateEffect(true);
                 super.touchUp(event, x, y, pointer, button);
             }
 
@@ -130,6 +140,8 @@ public class MusicPlayerScreen implements Screen {
                 musicFile.setPosition(musicSlider.getValue() / 1000);
                 if(!isRec)
                     musicFile.play();
+                leftBeatCircle.setActivateEffect(true);
+                rightBeatCircle.setActivateEffect(true);
                 super.clicked(event, x, y);
             }
         });
@@ -206,6 +218,8 @@ public class MusicPlayerScreen implements Screen {
     private void setStageActorsForPlay(){
         leftBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/2));
         rightBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4 * 3, Gdx.graphics.getHeight()/2));
+        leftBeatCircle.setActivateEffect(true);
+        rightBeatCircle.setActivateEffect(true);
 
         musicSlider.setWidth(Gdx.graphics.getWidth() / 1.5f);
         musicSlider.setPosition(Gdx.graphics.getWidth()/2 - musicSlider.getWidth()/2 , 20);
@@ -227,6 +241,8 @@ public class MusicPlayerScreen implements Screen {
     private void setStageActorsForEdit(){
         leftBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/ 1.5f));
         rightBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4 * 3, Gdx.graphics.getHeight()/1.5f));
+        leftBeatCircle.setActivateEffect(false);
+        rightBeatCircle.setActivateEffect(false);
 
         fileLabel.setSize(60,30);
         fileLabel.setPosition((Gdx.graphics.getWidth()/2) - fileLabel.getWidth()/2, 20);
@@ -295,8 +311,12 @@ public class MusicPlayerScreen implements Screen {
         if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
             if (musicFile.isPlaying()) {
                 musicFile.pause();
+                leftBeatCircle.setActivateEffect(false);
+                rightBeatCircle.setActivateEffect(false);
             } else {
                 musicFile.play();
+                leftBeatCircle.setActivateEffect(true);
+                rightBeatCircle.setActivateEffect(true);
             }
         }
 
@@ -335,10 +355,18 @@ public class MusicPlayerScreen implements Screen {
         else
             rightBeatCircle.setActive(false);
 
-        if(!isRec){
-            leftBeatCircle.update(dt);
-            rightBeatCircle.update(dt);
-        }
+        // set beat cirle animation
+
+        Long futureBeatTracePosition = music.getBeatTraceIndexFromMillis(musicSlider.getValue() + leftBeatCircle.getAnimationDuration());
+        int futureBeatTrace = music.getBeatTrace()[futureBeatTracePosition.intValue()];
+        if((futureBeatTrace & LEFT_BEAT) == LEFT_BEAT)
+            leftBeatCircle.addCircleAnimation(futureBeatTracePosition);
+
+        if((futureBeatTrace & RIGHT_BEAT) == RIGHT_BEAT)
+            rightBeatCircle.addCircleAnimation(futureBeatTracePosition);
+
+        leftBeatCircle.update(dt);
+        rightBeatCircle.update(dt);
     }
 
     @Override
@@ -354,8 +382,8 @@ public class MusicPlayerScreen implements Screen {
             for (BeatBar beatBar : beatBars)
                 beatBar.draw(game.batch);
 
-        leftBeatCircle.draw(game.batch, isRec);
-        rightBeatCircle.draw(game.batch, isRec);
+        leftBeatCircle.draw(game.batch);
+        rightBeatCircle.draw(game.batch);
         game.batch.end();
         stage.act();
         stage.draw();
