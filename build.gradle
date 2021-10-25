@@ -27,6 +27,7 @@ allprojects {
         ashleyVersion = '1.7.3'
         aiVersion = '1.8.2'
         gdxControllersVersion = '2.1.0'
+        visuiVersion = '1.5.0'
     }
 
     repositories {
@@ -36,6 +37,8 @@ allprojects {
         gradlePluginPortal()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple' }
     }
 }
 
@@ -89,6 +92,10 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
         api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
-        
+        api "com.badlogicgames.gdx:gdx-tools:$gdxVersion"
+        compile "com.kotcrab.vis:vis-ui:$visuiVersion"
+        compile group: 'ws.schild', name: 'jave-all-deps', version: '3.2.0'
+        implementation 'com.github.sealedtx:java-youtube-downloader:3.0.1'
+        implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1'
     }
 }
