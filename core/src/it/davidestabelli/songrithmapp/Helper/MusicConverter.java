@@ -9,6 +9,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
 import com.badlogic.gdx.files.FileHandle;
@@ -21,14 +25,25 @@ import ws.schild.jave.MultimediaObject;
 import ws.schild.jave.encode.AudioAttributes;
 import ws.schild.jave.encode.EncodingAttributes;
 
+@SuppressWarnings("NewApi")
 public class MusicConverter {
     private static final int NUMBER_OF_SPECTRUMS = 19;
     private static final float BEAT_TRACE_SAMPLE = 0.11f;
     public static final DateTimeFormatter AUDIO_FORMAT = DateTimeFormatter.ofPattern("mm:ss");
 
+    public static final int FINISH_STATUS = 1;
+    public static final int STARTING_STATUS = 0;
+    public static final int ERROR_STATUS = 2;
+
     private File source;		                 
     private File oggTarget;
     private File wavTarget;
+    private int oggTargetStatus;
+    private int wavTargetStatus;
+    private List<Float>[] spectrumList;
+    private int spectrumListStatus;
+    private int importStatus;
+    private int importingPercentage;
 
     private Long duration; // millis
 
@@ -38,8 +53,6 @@ public class MusicConverter {
     private String sourceFormat;
     private String fileName;
 
-    private List<Float>[] spectrumList;
-
     private boolean hasBeatTrace;
     private int[] beatTrace;
     private double beatTraceDurationRatio;
@@ -48,25 +61,26 @@ public class MusicConverter {
     public MusicConverter(String oggPath, Map<String,Object> spectrumListMap, int[] beatTrace, String name) throws EncoderException {
         this.oggTarget = new File(oggPath);
         //this.wavTarget = new File(wavPath);
-        spectrumList = new List[NUMBER_OF_SPECTRUMS];
-        for (int i = 0; i < spectrumList.length; i++) {
+        this.spectrumList = new List[NUMBER_OF_SPECTRUMS];
+        for (int i = 0; i < this.spectrumList.length; i++) {
             JSONArray mapArray = (JSONArray)spectrumListMap.get(String.format("%d",i));
-            List<Float> spectrum = new ArrayList<Float>();
+            List<Float> spectrum = mapArray.parallelStream().filter(entry -> entry instanceof BigDecimal).map(e -> ((BigDecimal) e).floatValue()).collect(Collectors.toList());
+            /*List<Float> spectrum = new ArrayList<Float>();
             for (Object value : mapArray) {
                 BigDecimal decimalValue = (BigDecimal) value;
                 spectrum.add(decimalValue.floatValue());
-            }
-            spectrumList[i] = spectrum;
+            }*/
+            this.spectrumList[i] = spectrum;
         }
 
         //Getting infos
         MultimediaObject sourceObject = new MultimediaObject(oggTarget);
-        duration = sourceObject.getInfo().getDuration();
-        secondsDuration = duration / 1000;
-        stringedDuration = LocalTime.ofSecondOfDay(Math.round(secondsDuration)).format(AUDIO_FORMAT);
+        this.duration = sourceObject.getInfo().getDuration();
+        this.secondsDuration = duration / 1000;
+        this.stringedDuration = LocalTime.ofSecondOfDay(Math.round(secondsDuration)).format(AUDIO_FORMAT);
 
-        sourceFormat = sourceObject.getInfo().getFormat();
-        fileName = name;
+        this.sourceFormat = sourceObject.getInfo().getFormat();
+        this.fileName = name;
 
         //Set Beat Trace
         if(beatTrace == null) {
@@ -80,87 +94,144 @@ public class MusicConverter {
             this.hasBeatTrace = true;
         }
 
-        beatTraceDurationRatio = this.beatTrace.length / duration.doubleValue();
-        durationBeatTraceRatio = duration.doubleValue() / this.beatTrace.length;
+        this.beatTraceDurationRatio = this.beatTrace.length / duration.doubleValue();
+        this.durationBeatTraceRatio = duration.doubleValue() / this.beatTrace.length;
+
+        this.oggTargetStatus = FINISH_STATUS;
+        this.wavTargetStatus = FINISH_STATUS;
+        this.spectrumListStatus = FINISH_STATUS;
+        this.importStatus = FINISH_STATUS;
+        this.importingPercentage = 100;
     }
 
     public MusicConverter(File toConvert) {
         this.source = toConvert;
+        oggTarget = null;
+        wavTarget = null;
+
+        this.oggTargetStatus = STARTING_STATUS;
+        this.wavTargetStatus = STARTING_STATUS;
+        this.spectrumListStatus = STARTING_STATUS;
+        this.importStatus = STARTING_STATUS;
+        this.importingPercentage = 0;
+
         try {
             //Getting infos
             MultimediaObject sourceObject = new MultimediaObject(source);
             duration = sourceObject.getInfo().getDuration();
             sourceFormat = sourceObject.getInfo().getFormat();
             fileName = source.getName().split("\\.")[0];
-            
-            if(!sourceFormat.equals("wav")){            
-                //Audio Attributes                                       
-                AudioAttributes audio = new AudioAttributes();              
-                audio.setCodec("pcm_s16le");                                  
-                audio.setChannels(2);                                       
-                audio.setSamplingRate(44100);
-                                                                            
-                //Encoding attributes                                       
-                EncodingAttributes attrs = new EncodingAttributes();        
-                attrs.setOutputFormat("wav");                                     
-                attrs.setAudioAttributes(audio);       
-                attrs.setMapMetaData(true);
-                
-                //Encoder
-                wavTarget = Files.createTempFile(source.getName().split("\\.")[0], ".wav").toFile();                 
-                Encoder encoder = new Encoder();
-                encoder.encode(new MultimediaObject(source), wavTarget, attrs);
-            } else {
-                wavTarget = source;
-            }
 
-            if(!sourceFormat.equals("ogg")){            
-                //Audio Attributes                                       
-                AudioAttributes audio = new AudioAttributes();              
-                audio.setCodec("libvorbis");
-                audio.setChannels(2);
-                float samplingRate = (40960/ (BEAT_TRACE_SAMPLE * 2 * 2)) * 2;
-                audio.setSamplingRate(Math.round(samplingRate));
-                                                                            
-                //Encoding attributes                                       
-                EncodingAttributes attrs = new EncodingAttributes();        
-                attrs.setOutputFormat("ogg");                                     
-                attrs.setAudioAttributes(audio);
-                                                                            
-                //Encoder
-                oggTarget = Files.createTempFile(source.getName().split("\\.")[0], ".ogg").toFile();                 
-                Encoder encoder = new Encoder();
-                encoder.encode(new MultimediaObject(source), oggTarget, attrs);
-            } else {
-                oggTarget = source;
-            }
+            CountDownLatch latch = new CountDownLatch(2);
+            ExecutorService executor = Executors.newFixedThreadPool(3);
 
-            WaveDecoder decoder = new WaveDecoder(new FileInputStream(wavTarget));
-            FFT fft = new FFT(1024, 44100);
+            executor.execute(() -> {
+                if(!sourceFormat.equals("ogg")){
+                    try {
+                        //Audio Attributes
+                        AudioAttributes audio = new AudioAttributes();
+                        audio.setCodec("libvorbis");
+                        audio.setChannels(2);
+                        float samplingRate = (40960 / (BEAT_TRACE_SAMPLE * 2 * 2)) * 2;
+                        audio.setSamplingRate(Math.round(samplingRate));
 
-            float[] samples = new float[1024];
-            float[] spectrum = new float[1024 / 2 + 1];
-            spectrumList = new List[NUMBER_OF_SPECTRUMS];
+                        //Encoding attributes
+                        EncodingAttributes attrs = new EncodingAttributes();
+                        attrs.setOutputFormat("ogg");
+                        attrs.setAudioAttributes(audio);
 
-            while (decoder.readSamples(samples) > 0) {
-
-                fft.forward(samples);
-                spectrum = fft.getSpectrum();
-
-                int samplesPerSpectrum = spectrum.length / NUMBER_OF_SPECTRUMS;
-
-                for (int i = 0; i < NUMBER_OF_SPECTRUMS; i++) {
-                    float spectrumValueSum = 0;
-                    for (int j = 0; j < samplesPerSpectrum; j++) 
-                        spectrumValueSum += spectrum[j + (i * samplesPerSpectrum)];                    
-                    if(spectrumList[i] == null)
-                        spectrumList[i] = new ArrayList<Float>();
-                    spectrumList[i].add(spectrumValueSum);                    
+                        //Encoder
+                        oggTarget = Files.createTempFile(source.getName().split("\\.")[0], ".ogg").toFile();
+                        Encoder encoder = new Encoder();
+                        encoder.encode(new MultimediaObject(source), oggTarget, attrs);
+                        this.oggTargetStatus = FINISH_STATUS;
+                    } catch (Exception e){
+                        oggTarget = null;
+                        this.oggTargetStatus = ERROR_STATUS;
+                    }
+                } else {
+                    oggTarget = source;
+                    this.oggTargetStatus = FINISH_STATUS;
                 }
-            }
+                this.importingPercentage += 25;
+                latch.countDown();
+            });
 
-            wavTarget.delete();
+            executor.execute(() -> {
+                try {
+                    if(!sourceFormat.equals("wav")){
+                        //Audio Attributes
+                        AudioAttributes audio = new AudioAttributes();
+                        audio.setCodec("pcm_s16le");
+                        audio.setChannels(2);
+                        audio.setSamplingRate(44100);
 
+                        //Encoding attributes
+                        EncodingAttributes attrs = new EncodingAttributes();
+                        attrs.setOutputFormat("wav");
+                        attrs.setAudioAttributes(audio);
+                        attrs.setMapMetaData(true);
+
+                        //Encoder
+                        wavTarget = Files.createTempFile(source.getName().split("\\.")[0], ".wav").toFile();
+                        Encoder encoder = new Encoder();
+                        encoder.encode(new MultimediaObject(source), wavTarget, attrs);
+                    } else {
+                        wavTarget = source;
+                    }
+                    this.wavTargetStatus = FINISH_STATUS;
+                } catch (Exception e){
+                    wavTarget = null;
+                    this.wavTargetStatus = ERROR_STATUS;
+                }
+                this.importingPercentage += 25;
+                try {
+                    WaveDecoder decoder = new WaveDecoder(new FileInputStream(wavTarget));
+                    FFT fft = new FFT(1024, 44100);
+
+                    float[] samples = new float[1024];
+                    float[] spectrum = new float[1024 / 2 + 1];
+                    spectrumList = new List[NUMBER_OF_SPECTRUMS];
+                    while (decoder.readSamples(samples) > 0) {
+                        fft.forward(samples);
+                        spectrum = fft.getSpectrum();
+
+                        int samplesPerSpectrum = spectrum.length / NUMBER_OF_SPECTRUMS;
+
+                        for (int i = 0; i < NUMBER_OF_SPECTRUMS; i++) {
+                            float spectrumValueSum = 0;
+                            for (int j = 0; j < samplesPerSpectrum; j++)
+                                spectrumValueSum += spectrum[j + (i * samplesPerSpectrum)];
+                            if(spectrumList[i] == null)
+                                spectrumList[i] = new ArrayList<Float>();
+                            spectrumList[i].add(spectrumValueSum);
+                        }
+                    }
+                    wavTarget.delete();
+                    //toConvert.delete();
+                    this.spectrumListStatus = FINISH_STATUS;
+                } catch (Exception e){
+                    spectrumList = null;
+                    this.spectrumListStatus = ERROR_STATUS;
+                }
+                this.importingPercentage += 25;
+                latch.countDown();
+            });
+
+            executor.execute(() -> {
+                try {
+                    latch.await();
+                } catch(InterruptedException ex) {
+                    System.out.println(ex);
+                }
+
+                ImportedFileHandler.importNewFile(this);
+
+                this.importStatus = FINISH_STATUS;
+                this.importingPercentage += 25;
+            });
+
+            executor.shutdown();
         } catch (Exception ex) {                                      
             ex.printStackTrace();                                       
             oggTarget = null;   
@@ -244,6 +315,14 @@ public class MusicConverter {
 
     public String getPath() {
         return source.getPath();
+    }
+
+    public int getImportingPercentage() {
+        return importingPercentage;
+    }
+
+    public File getSource() {
+        return source;
     }
 }
 

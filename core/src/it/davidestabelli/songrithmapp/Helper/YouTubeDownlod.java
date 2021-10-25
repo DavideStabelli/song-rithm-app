@@ -35,6 +35,8 @@ public class YouTubeDownlod {
 
     private YoutubeDownloader downloader;
 
+    private MusicConverter generatedMusicFile;
+
     public int downloadProgress;
     public int downloadingState;
 
@@ -80,10 +82,9 @@ public class YouTubeDownlod {
 
                     @Override
                     public void onFinished(File videoInfo) {
-                        System.out.println("Finished file: " + videoInfo);
-                        MusicConverter musicConverter = new MusicConverter(videoInfo);
-                        ImportedFileHandler.importNewFile(musicConverter);
-                        videoInfo.delete();
+                        //System.out.println("Finished file: " + videoInfo);
+                        generatedMusicFile = new MusicConverter(videoInfo);
+                        //videoInfo.delete();
                         downloadingState = DOWNLOAD_FINISHED;
                     }
 
@@ -95,5 +96,9 @@ public class YouTubeDownlod {
                 })
                 .async();
         downloader.downloadVideoFile(request);
+    }
+
+    public MusicConverter getGeneratedMusicFile() {
+        return generatedMusicFile;
     }
 }
