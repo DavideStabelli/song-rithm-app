@@ -101,8 +101,10 @@ public class MusicPlayerScreen implements Screen {
                     rightBeatCircle.setActivateEffect(false);
                 } else {
                     musicFile.play();
-                    leftBeatCircle.setActivateEffect(true);
-                    rightBeatCircle.setActivateEffect(true);
+                    if(!isRec) {
+                        leftBeatCircle.setActivateEffect(true);
+                        rightBeatCircle.setActivateEffect(true);
+                    }
                 }
             }
         });
@@ -128,20 +130,22 @@ public class MusicPlayerScreen implements Screen {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 musicFile.setPosition(musicSlider.getValue() / 1000);
-                if(!isRec)
+                if(!isRec){
                     musicFile.play();
-                leftBeatCircle.setActivateEffect(true);
-                rightBeatCircle.setActivateEffect(true);
+                    leftBeatCircle.setActivateEffect(true);
+                    rightBeatCircle.setActivateEffect(true);
+                }
                 super.touchUp(event, x, y, pointer, button);
             }
 
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 musicFile.setPosition(musicSlider.getValue() / 1000);
-                if(!isRec)
+                if(!isRec) {
                     musicFile.play();
-                leftBeatCircle.setActivateEffect(true);
-                rightBeatCircle.setActivateEffect(true);
+                    leftBeatCircle.setActivateEffect(true);
+                    rightBeatCircle.setActivateEffect(true);
+                }
                 super.clicked(event, x, y);
             }
         });
@@ -315,8 +319,10 @@ public class MusicPlayerScreen implements Screen {
                 rightBeatCircle.setActivateEffect(false);
             } else {
                 musicFile.play();
-                leftBeatCircle.setActivateEffect(true);
-                rightBeatCircle.setActivateEffect(true);
+                if(!isRec) {
+                    leftBeatCircle.setActivateEffect(true);
+                    rightBeatCircle.setActivateEffect(true);
+                }
             }
         }
 
@@ -345,12 +351,12 @@ public class MusicPlayerScreen implements Screen {
 
         // set beat cirle activation
         int beatTrace = music.getBeatTrace(musicSlider.getValue());
-        if((beatTrace & LEFT_BEAT) == LEFT_BEAT)
+        if((beatTrace & LEFT_BEAT) == LEFT_BEAT && musicFile.isPlaying())
             leftBeatCircle.setActive(true);
         else
             leftBeatCircle.setActive(false);
 
-        if((beatTrace & RIGHT_BEAT) == RIGHT_BEAT)
+        if((beatTrace & RIGHT_BEAT) == RIGHT_BEAT && musicFile.isPlaying())
             rightBeatCircle.setActive(true);
         else
             rightBeatCircle.setActive(false);
@@ -359,10 +365,10 @@ public class MusicPlayerScreen implements Screen {
 
         Long futureBeatTracePosition = music.getBeatTraceIndexFromMillis(musicSlider.getValue() + leftBeatCircle.getAnimationDuration());
         int futureBeatTrace = music.getBeatTrace()[futureBeatTracePosition.intValue()];
-        if((futureBeatTrace & LEFT_BEAT) == LEFT_BEAT)
+        if((futureBeatTrace & LEFT_BEAT) == LEFT_BEAT && musicFile.isPlaying())
             leftBeatCircle.addCircleAnimation(futureBeatTracePosition);
 
-        if((futureBeatTrace & RIGHT_BEAT) == RIGHT_BEAT)
+        if((futureBeatTrace & RIGHT_BEAT) == RIGHT_BEAT && musicFile.isPlaying())
             rightBeatCircle.addCircleAnimation(futureBeatTracePosition);
 
         leftBeatCircle.update(dt);

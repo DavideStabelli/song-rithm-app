@@ -3,6 +3,7 @@ package it.davidestabelli.songrithmapp.Sprite;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
+import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
@@ -19,9 +20,11 @@ public class BeatCircle{
     private Texture outerTexture;
     private Texture innerTexture;
     private Vector2 position;
-    private ParticleEffect effect;
 
+    //private ParticleEffect effect;
+    //private boolean isEffectRunning;
     private boolean activateEffect;
+    private List<ParticleEffect> particleEffects;
     private List<BeatCircleAnimation> circleAnimations;
     private float animationDuration;
 
@@ -35,23 +38,35 @@ public class BeatCircle{
         this.position = position;
         this.radius = radius;
         this.active = false;
-        this.effect = new ParticleEffect();
+        /*this.effect = new ParticleEffect();
         this.effect.load(Gdx.files.internal("circle_hit_particles"), Gdx.files.internal(""));
-        this.effect.getEmitters().first().setPosition(position.x,position.y);
+        this.effect.setPosition(position.x,position.y);
+        this.isEffectRunning = false;*/
 
+        this.particleEffects = new ArrayList<ParticleEffect>();
         this.circleAnimations = new ArrayList<BeatCircleAnimation>();
         this.animationDuration = BeatCircleAnimation.animationDuration(radius);
     }
 
     public void update(float dt){
-        effect.update(dt);
+        List<ParticleEffect> toRemoveEffect = new ArrayList<>();
+        for (ParticleEffect effect : particleEffects) {
+            effect.update(dt);
+            if(effect.isComplete()) {
+                toRemoveEffect.add(effect);
+            }
+        }
+        for (ParticleEffect effect : toRemoveEffect) {
+            effect.dispose();
+            particleEffects.remove(effect);
+        }
 
-        List<BeatCircleAnimation> toRemove = new ArrayList<>();
+        List<BeatCircleAnimation> toRemoveCircle = new ArrayList<>();
 
         for (BeatCircleAnimation animation : circleAnimations)
             if (animation.update(dt))
-                toRemove.add(animation);
-        circleAnimations.removeAll(toRemove);
+                toRemoveCircle.add(animation);
+        circleAnimations.removeAll(toRemoveCircle);
     }
 
     public void draw(SpriteBatch batch){
@@ -70,7 +85,8 @@ public class BeatCircle{
                     radius);
         }
         if(activateEffect) {
-            effect.draw(batch);
+            for (ParticleEffect effect : particleEffects)
+                effect.draw(batch);
             for(BeatCircleAnimation animation : circleAnimations)
                 animation.draw(batch);
         }
@@ -83,7 +99,7 @@ public class BeatCircle{
 
     public void setActive(boolean active) {
         if (active && !this.active) {
-            effect.start();
+            addParticleEffect();
         }
         this.active = active;
     }
@@ -94,10 +110,15 @@ public class BeatCircle{
 
     public void setPosition(Vector2 position) {
         this.position = position;
-        effect.getEmitters().first().setPosition(position.x,position.y);
+        //effect.setPosition(position.x,position.y);
     }
 
     public void setActivateEffect(boolean activateEffect) {
+        if(activateEffect && !this.activateEffect){
+
+        } else if(!activateEffect && this.activateEffect){
+            //effect.setPosition(position.x,position.y);
+        }
         this.activateEffect = activateEffect;
     }
 
@@ -111,6 +132,14 @@ public class BeatCircle{
         }
         if(!exist)
             circleAnimations.add(new BeatCircleAnimation(position, radius, id));
+    }
+
+    public void addParticleEffect(){
+        ParticleEffect effect = new ParticleEffect();
+        effect.load(Gdx.files.internal("circle_hit_particles"), Gdx.files.internal(""));
+        effect.setPosition(position.x,position.y);
+        effect.start();
+        particleEffects.add(effect);
     }
 
     public float getAnimationDuration() {

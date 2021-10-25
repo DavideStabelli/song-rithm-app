@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.swing.JFileChooser;
 
@@ -122,10 +123,11 @@ public class ImportedFileHandler {
             int[] beatTrace = null;
             if((boolean) readedMap.get("hasBeatTrace")) {
                 JSONArray listArray = (JSONArray)readedMap.get("beatTrace");
-                beatTrace = new int[listArray.size()];
+                beatTrace = listArray.stream().filter(i -> i instanceof Integer).mapToInt(e -> (int) e).toArray();
+                /*beatTrace = new int[listArray.size()];
                 for (int i = 0; i < listArray.size(); i++) {
                     beatTrace[i] = listArray.getInteger(i).intValue();
-                }
+                }*/
             }
             return new MusicConverter(oggPath, spectrumListMap, beatTrace, fileName);
         }
