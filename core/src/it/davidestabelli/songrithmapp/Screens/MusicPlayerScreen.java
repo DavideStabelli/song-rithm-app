@@ -46,6 +46,7 @@ public class MusicPlayerScreen implements Screen {
     VisImage clearButton;
     BeatSlider musicSlider;
     VisLabel fileLabel;
+    VisLabel editInfo;
 
     List<BeatBar> beatBars;
     float barRefreshTime;
@@ -172,6 +173,14 @@ public class MusicPlayerScreen implements Screen {
         stage.addActor(recButton);
         isRec = false;
 
+        // rec info
+        this.editInfo = new VisLabel();
+        editInfo.setText("Legenda dei tasti:\nF = Beat Sinistro\nJ = Beat Destro\nSpazio = Riproduci/Pausa");
+        editInfo.setColor(Color.DARK_GRAY);
+        editInfo.setVisible(false);
+        editInfo.setPosition(Gdx.graphics.getWidth()/6, Gdx.graphics.getHeight()/2);
+        stage.addActor(editInfo);
+
         // clear beat button
         clearButton = new VisImage(clearButtonTexture);
         clearButton.setSize(50, 50);
@@ -213,17 +222,20 @@ public class MusicPlayerScreen implements Screen {
         barRefreshTime = 0;
 
         // beat circles
-        leftBeatCircle = new BeatCircle(new Vector2(Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/2), Gdx.graphics.getHeight()/3);
-        rightBeatCircle = new BeatCircle(new Vector2((Gdx.graphics.getWidth()/4) * 3, Gdx.graphics.getHeight()/2), Gdx.graphics.getHeight()/3);
+        leftBeatCircle = new BeatCircle(new Vector2((Gdx.graphics.getWidth()/2) - Gdx.graphics.getHeight()/10, Gdx.graphics.getHeight()/4), Gdx.graphics.getHeight()/5, true);
+        rightBeatCircle = new BeatCircle(new Vector2((Gdx.graphics.getWidth()/2) + Gdx.graphics.getHeight()/10, Gdx.graphics.getHeight()/4), Gdx.graphics.getHeight()/5, false);
 
         setStageActorsForPlay();
     }
 
     private void setStageActorsForPlay(){
-        leftBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/2));
-        rightBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4 * 3, Gdx.graphics.getHeight()/2));
+        //leftBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/2));
+        //rightBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4 * 3, Gdx.graphics.getHeight()/2));
         leftBeatCircle.setActivateEffect(true);
         rightBeatCircle.setActivateEffect(true);
+        leftBeatCircle.setHidden(false);
+        rightBeatCircle.setHidden(false);
+        editInfo.setVisible(false);
 
         musicSlider.setWidth(Gdx.graphics.getWidth() / 1.5f);
         musicSlider.setPosition(Gdx.graphics.getWidth()/2 - musicSlider.getWidth()/2 , 20);
@@ -243,10 +255,13 @@ public class MusicPlayerScreen implements Screen {
     }
 
     private void setStageActorsForEdit(){
-        leftBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/ 1.5f));
-        rightBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4 * 3, Gdx.graphics.getHeight()/1.5f));
+        //leftBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/ 1.5f));
+        //rightBeatCircle.setPosition(new Vector2(Gdx.graphics.getWidth()/4 * 3, Gdx.graphics.getHeight()/1.5f));
+        leftBeatCircle.setHidden(true);
+        rightBeatCircle.setHidden(true);
         leftBeatCircle.setActivateEffect(false);
         rightBeatCircle.setActivateEffect(false);
+        editInfo.setVisible(true);
 
         fileLabel.setSize(60,30);
         fileLabel.setPosition((Gdx.graphics.getWidth()/2) - fileLabel.getWidth()/2, 20);
