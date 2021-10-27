@@ -199,6 +199,7 @@ public class MusicPlayerScreen implements Screen {
         backToMenu.setPosition(20, Gdx.graphics.getHeight() - backToMenu.getHeight() - 20);
         backToMenu.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
+                ImportedFileHandler.updateBeatTrace(music);
                 dispose();
                 game.setScreen(new MenuScreen(game));
             }
@@ -327,7 +328,7 @@ public class MusicPlayerScreen implements Screen {
         }
 
         // pause with space key
-        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
+        if(Gdx.input.isKeyJustPressed(game.configs.pauseMusicKey)){
             if (musicFile.isPlaying()) {
                 musicFile.pause();
                 leftBeatCircle.setActivateEffect(false);
@@ -345,15 +346,15 @@ public class MusicPlayerScreen implements Screen {
 
         // rec update
         if(isRec){
-            if(Gdx.input.isKeyJustPressed(Input.Keys.F)){
+            if(Gdx.input.isKeyJustPressed(game.configs.editLeftBeatKey)){
                 music.setBeatTrace(millisPosition, LEFT_BEAT);
                 musicSlider.updateTags(music, musicFile);
             }
-            if(Gdx.input.isKeyJustPressed(Input.Keys.J)){
+            if(Gdx.input.isKeyJustPressed(game.configs.editRightBeatKey)){
                 music.setBeatTrace(millisPosition, RIGHT_BEAT);
                 musicSlider.updateTags(music, musicFile);
             }
-            if(Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE)){
+            if(Gdx.input.isKeyJustPressed(game.configs.deleteBeatKey)){
                 music.setBeatTrace(millisPosition, 0);
                 musicSlider.updateTags(music, musicFile);
             }

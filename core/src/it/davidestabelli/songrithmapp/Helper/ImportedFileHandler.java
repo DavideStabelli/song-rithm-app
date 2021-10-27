@@ -138,6 +138,22 @@ public class ImportedFileHandler {
         return null;
     }
 
+    public static Map getConfigurations(){
+        String filePath = FOLDER_PATH + "config.ini";
+        try
+        {
+            String content = new String ( Files.readAllBytes( Paths.get(filePath) ) );
+            Map<String,Object> readedMap = JSONObject.parseObject(content).getInnerMap();
+
+            return readedMap;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static boolean deleteImport(String fileName){
         String filePath = FOLDER_PATH + fileName;
         try {

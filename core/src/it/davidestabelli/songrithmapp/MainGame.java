@@ -17,6 +17,7 @@ import com.kotcrab.vis.ui.widget.ButtonBar;
 import com.kotcrab.vis.ui.widget.VisImage;
 import com.kotcrab.vis.ui.widget.ButtonBar.ButtonType;
 
+import it.davidestabelli.songrithmapp.Helper.Configurations;
 import it.davidestabelli.songrithmapp.Screens.MenuScreen;
 
 public class MainGame extends Game {
@@ -26,8 +27,7 @@ public class MainGame extends Game {
 	public static final int WINDOW_ICON_SIZE = 30;
 
 	public SpriteBatch batch;
-
-	private Stage stage;
+	public Configurations configs;
 
 	public VisImage closeWindow;
 	public Group windowsIcons;
@@ -37,6 +37,7 @@ public class MainGame extends Game {
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
+		configs = new Configurations();
 
 		closeWindowTexture = new Texture("exit.png");
 
