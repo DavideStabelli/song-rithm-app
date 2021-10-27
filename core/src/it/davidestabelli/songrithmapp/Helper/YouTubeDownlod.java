@@ -32,6 +32,7 @@ public class YouTubeDownlod {
     public String videoInfoString;
     private String videoTitle;
     private Format format;
+    private boolean isUrlValid;
 
     private YoutubeDownloader downloader;
 
@@ -41,26 +42,33 @@ public class YouTubeDownlod {
     public int downloadingState;
 
     public YouTubeDownlod (String url){
-        this.url = url;
+        try {
+            this.url = url;
 
-        String[] splittetUrl = url.split("=");
-        this.videoId = splittetUrl[splittetUrl.length - 1];
+            String[] splittetUrl = url.split("=");
+            this.videoId = splittetUrl[splittetUrl.length - 1];
 
-        downloadingState = DOWNLOAD_WAITING;
+            downloadingState = DOWNLOAD_WAITING;
 
-        // init downloader with default config
-        this.downloader = new YoutubeDownloader();
+            // init downloader with default config
+            this.downloader = new YoutubeDownloader();
 
-        VideoInfo info = requestVideoInfo();
-        this.videoTitle = info.details().title();
-        String duration = LocalTime.ofSecondOfDay(info.details().lengthSeconds()).format(MusicConverter.AUDIO_FORMAT);
-        String viewCount = NumberFormat.getIntegerInstance(Locale.ITALY).format(info.details().viewCount());
-        this.videoInfoString = String.format("%s \n %s | %s views", videoTitle, duration, viewCount);
+            VideoInfo info = null;
 
-        format = info.bestAudioFormat();
+            info = requestVideoInfo();
+            this.videoTitle = info.details().title();
+            String duration = LocalTime.ofSecondOfDay(info.details().lengthSeconds()).format(MusicConverter.AUDIO_FORMAT);
+            String viewCount = NumberFormat.getIntegerInstance(Locale.ITALY).format(info.details().viewCount());
+            this.videoInfoString = String.format("%s \n %s | %s views", videoTitle, duration, viewCount);
+
+            format = info.bestAudioFormat();
+            this.isUrlValid = true;
+        } catch (Exception e) {
+            this.isUrlValid = false;
+        }
     }
 
-    public VideoInfo requestVideoInfo(){
+    public VideoInfo requestVideoInfo() throws Exception{
         RequestVideoInfo request = new RequestVideoInfo(videoId);
         Response<VideoInfo> response = downloader.getVideoInfo(request);
         return response.data();
@@ -100,5 +108,9 @@ public class YouTubeDownlod {
 
     public MusicConverter getGeneratedMusicFile() {
         return generatedMusicFile;
+    }
+
+    public boolean isUrlValid() {
+        return isUrlValid;
     }
 }

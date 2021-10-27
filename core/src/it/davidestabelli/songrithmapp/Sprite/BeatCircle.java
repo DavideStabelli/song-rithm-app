@@ -14,25 +14,24 @@ import java.util.Queue;
 import it.davidestabelli.songrithmapp.MainGame;
 
 public class BeatCircle{
-    public static final float START_ANIMATION_CIRCLE_RADIUS = Gdx.graphics.getHeight() / 2;
-    public static final float ANIMATION_RADIUS_DELTA = 200;
-
     private Texture outerTexture;
     private Texture innerTexture;
     private Vector2 position;
 
     //private ParticleEffect effect;
     //private boolean isEffectRunning;
-    private boolean activateEffect;
+    private boolean activateEffect;    
     private List<ParticleEffect> particleEffects;
     private List<BeatCircleAnimation> circleAnimations;
     private float animationDuration;
 
     private boolean active;
+    private boolean hidden;
 
+    private boolean left;
     private float radius;
 
-    public BeatCircle(Vector2 position, float radius){
+    public BeatCircle(Vector2 position, float radius, boolean left){
         this.outerTexture = new Texture("outer_circle.png");
         this.innerTexture = new Texture("inner_circle.png");
         this.position = position;
@@ -46,6 +45,8 @@ public class BeatCircle{
         this.particleEffects = new ArrayList<ParticleEffect>();
         this.circleAnimations = new ArrayList<BeatCircleAnimation>();
         this.animationDuration = BeatCircleAnimation.animationDuration(radius);
+        this.hidden = false;
+        this.left = left;
     }
 
     public void update(float dt){
@@ -70,25 +71,26 @@ public class BeatCircle{
     }
 
     public void draw(SpriteBatch batch){
-
-        if(active){
-            batch.draw(innerTexture,
-                    position.x - radius/2,
-                    position.y - radius/2,
-                    radius,
-                    radius);
-        } else {
-            batch.draw(outerTexture,
-                    position.x - radius/2,
-                    position.y - radius/2,
-                    radius,
-                    radius);
-        }
-        if(activateEffect) {
-            for (ParticleEffect effect : particleEffects)
-                effect.draw(batch);
-            for(BeatCircleAnimation animation : circleAnimations)
-                animation.draw(batch);
+        if(!hidden){
+            if(active){
+                batch.draw(innerTexture,
+                        position.x - radius/2,
+                        position.y - radius/2,
+                        radius,
+                        radius);
+            } else {
+                batch.draw(outerTexture,
+                        position.x - radius/2,
+                        position.y - radius/2,
+                        radius,
+                        radius);
+            }
+            if(activateEffect) {
+                for (ParticleEffect effect : particleEffects)
+                    effect.draw(batch);
+                for(BeatCircleAnimation animation : circleAnimations)
+                    animation.draw(batch);
+            }
         }
     }
 
@@ -131,7 +133,7 @@ public class BeatCircle{
             }
         }
         if(!exist)
-            circleAnimations.add(new BeatCircleAnimation(position, radius, id));
+            circleAnimations.add(new BeatCircleAnimation(position, radius, id, left));
     }
 
     public void addParticleEffect(){
@@ -145,4 +147,12 @@ public class BeatCircle{
     public float getAnimationDuration() {
         return animationDuration;
     }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }    
 }

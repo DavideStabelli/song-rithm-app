@@ -51,30 +51,37 @@ import it.davidestabelli.songrithmapp.Sprite.ImportedFileList;
 public class MenuScreen implements Screen {
     private static final float CLIPBOARD_CHECK_INTERVAL = 1f;
 
+    //Variables
     public MainGame game;
-
     private Stage stage;
-
-    VisTextButton startButton;
-    VisTextButton importFileButton;
-    VisTextButton importFromUrlButton;
-    ImportedFileList importedFileList;
-
-    VisWindow importFromUrlPopUp;
-    VisTextField urlTextField;
-    VisTextButton downloadButton;
-    VisImageButton closeButton;
-    VisLabel linkInfo;
-    VisLabel downloadProgressPercentage;
-    YouTubeDownlod ytVideo;
-    MusicConverter importingMusicFile;
-    VisProgressBar downloadProgressBar;
+    private YouTubeDownlod ytVideo;
+    private MusicConverter importingMusicFile;
     private float clipboardCheckTime;
 
-    FileChooser fileChooser;
+    //Stage Elements
+    private VisTextButton startButton;
+    private ImportedFileList importedFileList;
 
-    Texture background;
-    Texture blackBackground;
+    //Options Elements
+    private VisTextButton configButton;
+
+    //Downloader Elements
+    private VisTextButton importFromUrlButton;
+    private VisWindow importFromUrlPopUp;
+    private VisTextField urlTextField;
+    private VisTextButton downloadButton;
+    private VisImageButton closeButton;
+    private VisLabel linkInfo;
+    private VisLabel downloadProgressPercentage;
+    private VisProgressBar downloadProgressBar;
+
+    //Import Elements
+    private VisTextButton importFileButton;
+    private FileChooser fileChooser;
+
+    //Texture
+    private Texture background;
+    private Texture blackBackground;
 
     public MenuScreen(MainGame mainGame) {
         this.game = mainGame;
@@ -134,6 +141,13 @@ public class MenuScreen implements Screen {
         importFileButton.setPosition((Gdx.graphics.getWidth() / 4) * 3 - (startButton.getWidth() / 2),
                 (Gdx.graphics.getHeight() / 8) * 5);
         stage.addActor(importFileButton);
+
+        // config Button
+        configButton = new VisTextButton("Opzioni");
+        configButton.setSize((Gdx.graphics.getWidth() / 6), (Gdx.graphics.getHeight() / 8));
+        configButton.setPosition((Gdx.graphics.getWidth() / 4) * 3 - (startButton.getWidth() / 2),
+                (Gdx.graphics.getHeight() / 8) * 3);
+        stage.addActor(configButton);
 
         // import from URL
         importFromUrlButton = new VisTextButton("Importa Da URL");
@@ -206,20 +220,31 @@ public class MenuScreen implements Screen {
         importFromUrlPopUp.setResizable(false);
         importFromUrlPopUp.columnDefaults(2).left();
         urlTextField = new VisTextField();
+        urlTextField.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                downloadButton.setDisabled(false);
+                linkInfo.setText(". . .");
+            }
+        });
         importFromUrlPopUp.add(urlTextField).expand().fillX();
         downloadButton = new VisTextButton("Download");
         downloadButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-
                 ytVideo = new YouTubeDownlod(urlTextField.getText());
 
-                downloadProgressBar = new VisProgressBar(0,100,0.1f,false);
-                downloadProgressPercentage = new VisLabel("");
+                if(ytVideo.isUrlValid()) {
+                    downloadProgressBar = new VisProgressBar(0, 100, 0.1f, false);
+                    downloadProgressPercentage = new VisLabel("");
 
-                importFromUrlPopUp.row();
-                importFromUrlPopUp.add(downloadProgressBar).expand().fillX();
-                importFromUrlPopUp.add(downloadProgressPercentage);
-                ytVideo.downloadAudio();
+                    importFromUrlPopUp.row();
+                    importFromUrlPopUp.add(downloadProgressBar).expand().fillX();
+                    importFromUrlPopUp.add(downloadProgressPercentage);
+                    ytVideo.downloadAudio();
+                } else {
+                    linkInfo.setText("LINK NON VALIDO");
+                    downloadButton.setDisabled(true);
+                }
             }
         });
         importFromUrlPopUp.add(downloadButton);
@@ -291,8 +316,11 @@ public class MenuScreen implements Screen {
                             new URL(clipboardData);
                             String[] splittedBySlash = clipboardData.split("/");
                             String[] splittedByEqual = splittedBySlash[splittedBySlash.length - 1].split("=");
-                            if (splittedByEqual[0].equals(YouTubeDownlod.YOUTUBE_URL_WATCH))
+                            if (splittedByEqual[0].equals(YouTubeDownlod.YOUTUBE_URL_WATCH)) {
                                 urlTextField.setText(clipboardData);
+                                linkInfo.setText(". . .");
+                                downloadButton.setDisabled(false);
+                            }
                         }
                     } catch (Exception e) {
                     }
