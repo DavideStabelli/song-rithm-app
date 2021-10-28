@@ -62,6 +62,8 @@ public class ImportedFileHandler {
             }
             fileContentMap.put("spectrumList", fileSpectrumListMap);
 
+            fileContentMap.put("numberOfTraces", musicElaboratedFile.getNumberOfBeatTraces());
+
             fileContentMap.put("hasBeatTrace", musicElaboratedFile.hasBeatTrace());
 
             if(musicElaboratedFile.hasBeatTrace())
@@ -129,7 +131,8 @@ public class ImportedFileHandler {
                     beatTrace[i] = listArray.getInteger(i).intValue();
                 }*/
             }
-            return new MusicConverter(oggPath, spectrumListMap, beatTrace, fileName);
+            Integer numberOfTraces = (Integer) readedMap.get("numberOfTraces");
+            return new MusicConverter(oggPath, spectrumListMap, beatTrace, fileName, numberOfTraces);
         }
         catch (Exception e)
         {

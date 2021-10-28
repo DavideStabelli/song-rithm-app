@@ -57,8 +57,9 @@ public class MusicConverter {
     private int[] beatTrace;
     private double beatTraceDurationRatio;
     private double durationBeatTraceRatio;
+    private int numberOfBeatTraces;
 
-    public MusicConverter(String oggPath, Map<String,Object> spectrumListMap, int[] beatTrace, String name) throws EncoderException {
+    public MusicConverter(String oggPath, Map<String,Object> spectrumListMap, int[] beatTrace, String name, int numberOfBeatTraces) throws EncoderException {
         this.oggTarget = new File(oggPath);
         //this.wavTarget = new File(wavPath);
         this.spectrumList = new List[NUMBER_OF_SPECTRUMS];
@@ -93,7 +94,7 @@ public class MusicConverter {
             this.beatTrace = beatTrace;
             this.hasBeatTrace = true;
         }
-
+        this.numberOfBeatTraces = numberOfBeatTraces;
         this.beatTraceDurationRatio = this.beatTrace.length / duration.doubleValue();
         this.durationBeatTraceRatio = duration.doubleValue() / this.beatTrace.length;
 
@@ -114,6 +115,8 @@ public class MusicConverter {
         this.spectrumListStatus = STARTING_STATUS;
         this.importStatus = STARTING_STATUS;
         this.importingPercentage = 0;
+
+        this.numberOfBeatTraces = 1;
 
         try {
             //Getting infos
@@ -323,6 +326,10 @@ public class MusicConverter {
 
     public File getSource() {
         return source;
+    }
+
+    public int getNumberOfBeatTraces() {
+        return numberOfBeatTraces;
     }
 }
 
