@@ -186,6 +186,9 @@ public class MenuScreen implements Screen {
         importFromUrlPopUp.row();
         importFromUrlPopUp.add(linkInfo).expand().fill();
 
+        urlTextField = new VisTextField();
+        urlTextField.setDisabled(false);
+
         stage.addActor(importFromUrlPopUp.fadeIn());
     }
 
