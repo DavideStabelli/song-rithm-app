@@ -224,7 +224,7 @@ public class MusicPlayerScreen implements Screen {
         barRefreshTime = 0;
 
         // beat circles
-        beatCircles = new BeatCircle[music.getNumberOfBeatTraces()];
+        beatCircles = new BeatCircle[music.getNumberOfBeatTraces() * 2];
         float diameter = Gdx.graphics.getHeight()/5;
         for (int i = 0; i < beatCircles.length; i++) {
             boolean isLeft = i%2 == 0;

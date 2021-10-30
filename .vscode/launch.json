@@ -3,19 +3,14 @@
     // Al passaggio del mouse vengono visualizzate le descrizioni degli attributi esistenti.
     // Per altre informazioni, visitare: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
+    "configurations": [       
         {
             "type": "java",
-            "name": "Launch Current File",
-            "request": "launch",
-            "mainClass": "${file}"
-        },
-        {
-            "type": "java",
-            "name": "Launch DesktopLauncher",
-            "request": "launch",
-            "mainClass": "it.davidestabelli.songrithmapp.desktop.DesktopLauncher",
-            "projectName": "song-rithm-app-desktop"
+            "name": "Attach",
+            "projectName": "desktop",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": "5005"
         }
     ]
 }

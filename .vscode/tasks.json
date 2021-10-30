@@ -1,0 +1,23 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "gradle",
+			"id": "c:\\git\\song-rithm-appdesktop:debugdesktop",
+			"script": "desktop:debug",
+			"description": "",
+			"group": "other",
+			"project": "desktop",
+			"buildFile": "C:\\git\\song-rithm-app\\desktop\\build.gradle",
+			"rootProject": "song-rithm-app",
+			"projectFolder": "c:\\git\\song-rithm-app",
+			"workspaceFolder": "c:\\git\\song-rithm-app",
+			"args": "",
+			"javaDebug": false,
+			"problemMatcher": [
+				"$gradle"
+			],
+			"label": "gradle: desktop:debug"
+		}
+	]
+}

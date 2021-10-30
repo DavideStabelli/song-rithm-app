@@ -45,12 +45,16 @@ public class BeatSlider extends VisSlider {
         tagCursorTexture = new Texture("cursor.png");
 
         tagCursor = new VisImage(tagCursorTexture);
-        tagCursor.setSize(tagCursorTexture.getWidth(), tagCursorTexture.getHeight());
+        tagCursor.setSize(tagCursorTexture.getWidth(), DEFAULT_TAG_HEIGHT);
         tagSelection = new VisImage(tagSelectionTexture);
-        tagSelection.setSize(DEFAULT_TAG_WIDTH, tagSelectionTexture.getHeight());
+        tagSelection.setSize(DEFAULT_TAG_WIDTH, DEFAULT_TAG_HEIGHT);
         
         tagLists = new Group[beatNumber];
         editMode = false;
+        for (int i = 0; i < tagLists.length; i++) {
+            tagLists[i] = new Group();
+            stage.addActor(tagLists[i]);
+        }
         for(Group tagList : tagLists) {
             tagList = new Group();
             stage.addActor(tagList);
