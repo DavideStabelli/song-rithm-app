@@ -272,7 +272,7 @@ public class MusicPlayerScreen implements Screen {
             beatCircle.setActivateEffect(false);
             beatCircle.setHidden(true);
         }
-        editInfo.setVisible(true);
+        editInfo.setVisible(false);
 
         fileLabel.setSize(60,30);
         fileLabel.setPosition((Gdx.graphics.getWidth()/2) - fileLabel.getWidth()/2, 20);

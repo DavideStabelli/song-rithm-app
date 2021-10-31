@@ -21,8 +21,8 @@ import it.davidestabelli.songrithmapp.Helper.Configurations;
 import it.davidestabelli.songrithmapp.Screens.MenuScreen;
 
 public class MainGame extends Game {
-	public static final int V_WIDTH = 1200;
-	public static final int V_HEIGHT = 624;
+	public static final int V_WIDTH = 1280;
+	public static final int V_HEIGHT = 720;
 	public static final float PPM = 100;
 	public static final int WINDOW_ICON_SIZE = 30;
 
