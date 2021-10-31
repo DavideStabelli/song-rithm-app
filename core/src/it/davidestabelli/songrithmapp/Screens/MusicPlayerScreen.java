@@ -90,7 +90,7 @@ public class MusicPlayerScreen implements Screen {
 
         // file path label
         fileLabel = new VisLabel("");
-        fileLabel.setColor(Color.BLACK);
+        fileLabel.setColor(Color.WHITE);
         stage.addActor(fileLabel);
 
         // music play/pause button
@@ -113,7 +113,7 @@ public class MusicPlayerScreen implements Screen {
         stage.addActor(playPauseButton);
 
         // music slider
-        musicSlider = new BeatSlider(0f, music.getDuration(), 0.01f, false, stage);
+        musicSlider = new BeatSlider(0f, music.getDuration(), 0.01f, false, stage, music.getNumberOfBeatTraces());
         musicSlider.addListener(new ClickListener() {
             @Override
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
@@ -177,7 +177,7 @@ public class MusicPlayerScreen implements Screen {
         // rec info
         this.editInfo = new VisLabel();
         editInfo.setText("Legenda dei tasti:\nF = Beat Sinistro\nJ = Beat Destro\nSpazio = Riproduci/Pausa");
-        editInfo.setColor(Color.DARK_GRAY);
+        editInfo.setColor(Color.WHITE);
         editInfo.setVisible(false);
         editInfo.setPosition(Gdx.graphics.getWidth()/6, Gdx.graphics.getHeight()/2);
         stage.addActor(editInfo);
@@ -230,7 +230,7 @@ public class MusicPlayerScreen implements Screen {
             boolean isLeft = i%2 == 0;
             float xPosition;
             if(isLeft){
-                xPosition = ((Gdx.graphics.getWidth() * (i + 1))/(music.getNumberOfBeatTraces() + 1)) - diameter / 2;
+                xPosition = ((Gdx.graphics.getWidth() * ((i/2) + 1) /(music.getNumberOfBeatTraces() + 1)) - diameter / 2);
             } else {
                 xPosition = beatCircles[i - 1].getPosition().x + diameter;
             }

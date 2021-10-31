@@ -71,7 +71,7 @@ public class BeatSlider extends VisSlider {
             Group tagList = tagLists[i];
             tagList.clearChildren();
             if (editMode) {
-                tagList.setPosition(0, getY() + getHeight() + 20);
+                tagList.setPosition(0, getY() + getHeight() + (20 + DEFAULT_TAG_HEIGHT) * i);
                 tagCursor.setPosition(0, 0);
                 tagSelection.setPosition(0, 0);
 
@@ -104,16 +104,17 @@ public class BeatSlider extends VisSlider {
     }
 
     public void update(MusicConverter music, Long millisPosition, float dt){
+        long sliderValueMillis = Math.round(getValue());
+        //float cursorX = (millisPosition.floatValue() / music.getDuration().floatValue()) * (DEFAULT_TAG_WIDTH * music.getBeatTrace().length);
+        float cursorX = (sliderValueMillis / (getMaxValue() - getMinValue())) * (DEFAULT_TAG_WIDTH * music.getBeatTrace().length);
+        tagCursor.setPosition(cursorX, 0);
+        //long index = music.getBeatTraceIndexFromMillis(millisPosition);
+        long index = music.getBeatTraceIndexFromMillis(sliderValueMillis);
+        tagSelection.setPosition(index * DEFAULT_TAG_WIDTH, 0);
+
         for (int i = 0; i < tagLists.length; i++) {
             Group tagList = tagLists[i];
-            long sliderValueMillis = Math.round(getValue());
-            //float cursorX = (millisPosition.floatValue() / music.getDuration().floatValue()) * (DEFAULT_TAG_WIDTH * music.getBeatTrace().length);
-            float cursorX = (sliderValueMillis / (getMaxValue() - getMinValue())) * (DEFAULT_TAG_WIDTH * music.getBeatTrace().length);
-            tagCursor.setPosition(cursorX, 0);
-            //long index = music.getBeatTraceIndexFromMillis(millisPosition);
-            long index = music.getBeatTraceIndexFromMillis(sliderValueMillis);
-            tagSelection.setPosition(index * DEFAULT_TAG_WIDTH, 0);
-
+            
             boolean isCursorOverHalfScreen = tagCursor.getX() + tagList.getX() >= (Gdx.graphics.getWidth() / 6) * 5;
             boolean isRollOverScreen = (tagList.getX() + (DEFAULT_TAG_WIDTH * music.getBeatTrace().length)) >= Gdx.graphics.getWidth();
 

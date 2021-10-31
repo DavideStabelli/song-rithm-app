@@ -1,10 +1,13 @@
 package it.davidestabelli.songrithmapp.Sprite;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.ArrayList;
@@ -16,6 +19,7 @@ import it.davidestabelli.songrithmapp.MainGame;
 public class BeatCircle{
     private Texture outerTexture;
     private Texture innerTexture;
+    private ShapeRenderer circleRenderer;
     private Vector2 position;
 
     //private ParticleEffect effect;
@@ -34,6 +38,8 @@ public class BeatCircle{
     public BeatCircle(Vector2 position, float radius, boolean left){
         this.outerTexture = new Texture("outer_circle.png");
         this.innerTexture = new Texture("inner_circle.png");
+        this.circleRenderer = new ShapeRenderer();
+        circleRenderer.setColor(Color.WHITE);
         this.position = position;
         this.radius = radius;
         this.active = false;
@@ -72,19 +78,28 @@ public class BeatCircle{
 
     public void draw(SpriteBatch batch){
         if(!hidden){
+            batch.end();
             if(active){
-                batch.draw(innerTexture,
+                /*batch.draw(innerTexture,
                         position.x - radius/2,
                         position.y - radius/2,
                         radius,
-                        radius);
+                        radius);*/
+                circleRenderer.begin(ShapeType.Filled);
             } else {
-                batch.draw(outerTexture,
+                /*batch.draw(outerTexture,
                         position.x - radius/2,
                         position.y - radius/2,
                         radius,
                         radius);
+                        batch.end();*/
+                circleRenderer.begin(ShapeType.Line);
+                
             }
+            circleRenderer.circle(position.x, position.y, radius/2);
+            circleRenderer.end();
+            batch.begin();
+
             if(activateEffect) {
                 for (ParticleEffect effect : particleEffects)
                     effect.draw(batch);

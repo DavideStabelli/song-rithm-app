@@ -116,7 +116,7 @@ public class MusicConverter {
         this.importStatus = STARTING_STATUS;
         this.importingPercentage = 0;
 
-        this.numberOfBeatTraces = 1;
+        this.numberOfBeatTraces = 2;
 
         try {
             //Getting infos
