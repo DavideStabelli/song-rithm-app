@@ -59,20 +59,20 @@ public class MusicConverter {
     private double durationBeatTraceRatio;
     private int numberOfBeatTraces;
 
-    public MusicConverter(String oggPath, Map<String,Object> spectrumListMap, int[] beatTrace, String name, int numberOfBeatTraces) throws EncoderException {
+    public MusicConverter(String oggPath, int[] beatTrace, String name, int numberOfBeatTraces) throws EncoderException {
         this.oggTarget = new File(oggPath);
         //this.wavTarget = new File(wavPath);
-        this.spectrumList = new List[NUMBER_OF_SPECTRUMS];
+        /*this.spectrumList = new List[NUMBER_OF_SPECTRUMS];
         for (int i = 0; i < this.spectrumList.length; i++) {
             JSONArray mapArray = (JSONArray)spectrumListMap.get(String.format("%d",i));
             List<Float> spectrum = mapArray.parallelStream().filter(entry -> entry instanceof BigDecimal).map(e -> ((BigDecimal) e).floatValue()).collect(Collectors.toList());
-            /*List<Float> spectrum = new ArrayList<Float>();
-            for (Object value : mapArray) {
-                BigDecimal decimalValue = (BigDecimal) value;
-                spectrum.add(decimalValue.floatValue());
-            }*/
+            //List<Float> spectrum = new ArrayList<Float>();
+            //for (Object value : mapArray) {
+            //    BigDecimal decimalValue = (BigDecimal) value;
+            //    spectrum.add(decimalValue.floatValue());
+            //}
             this.spectrumList[i] = spectrum;
-        }
+        }*/
 
         //Getting infos
         MultimediaObject sourceObject = new MultimediaObject(oggTarget);
@@ -116,7 +116,7 @@ public class MusicConverter {
         this.importStatus = STARTING_STATUS;
         this.importingPercentage = 0;
 
-        this.numberOfBeatTraces = 2;
+        this.numberOfBeatTraces = 4;
 
         try {
             //Getting infos
@@ -156,7 +156,7 @@ public class MusicConverter {
                     oggTarget = source;
                     this.oggTargetStatus = FINISH_STATUS;
                 }
-                this.importingPercentage += 25;
+                this.importingPercentage += 33;
                 latch.countDown();
             });
 
@@ -187,7 +187,8 @@ public class MusicConverter {
                     wavTarget = null;
                     this.wavTargetStatus = ERROR_STATUS;
                 }
-                this.importingPercentage += 25;
+                this.importingPercentage += 33;
+                /*
                 try {
                     WaveDecoder decoder = new WaveDecoder(new FileInputStream(wavTarget));
                     FFT fft = new FFT(1024, 44100);
@@ -217,7 +218,9 @@ public class MusicConverter {
                     spectrumList = null;
                     this.spectrumListStatus = ERROR_STATUS;
                 }
+
                 this.importingPercentage += 25;
+                */
                 latch.countDown();
             });
 
@@ -231,7 +234,7 @@ public class MusicConverter {
                 ImportedFileHandler.importNewFile(this);
 
                 this.importStatus = FINISH_STATUS;
-                this.importingPercentage += 25;
+                this.importingPercentage += 34;
             });
 
             executor.shutdown();

@@ -9,14 +9,15 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 
 public class BeatCircleAnimation {
-    public static final float START_ANIMATION_CIRCLE_DIAMETER = Gdx.graphics.getHeight() / 8f;
-    public static final float ANIMATION_DIAMETER_DELTA = 50;
+    public static final float START_ANIMATION_CIRCLE_DIAMETER_FRACTION = 2.5f;
+    public static final float ANIMATION_DIAMETER_DELTA = 60;
 
     private Texture texture;
     private ShapeRenderer circleRenderer;
 
     private float diameter;
     private float finalDiameter;
+    private float startDiameter;
     private Vector2 finalPosition;
     private Vector2 position;
     private boolean left;
@@ -31,29 +32,30 @@ public class BeatCircleAnimation {
         Gdx.gl.glLineWidth(3);
 
         this.finalPosition = position;
-        this.diameter = START_ANIMATION_CIRCLE_DIAMETER;
+        this.startDiameter = finalDiameter / START_ANIMATION_CIRCLE_DIAMETER_FRACTION;
         this.finalDiameter = finalDiameter;
+        this.diameter = startDiameter;
         this.animationId = id;
         this.position = new Vector2(position.x, 0);
         this.left = left;
     }
 
     public boolean update(float dt){
-        if(START_ANIMATION_CIRCLE_DIAMETER > finalDiameter)
+        if(startDiameter > finalDiameter)
             diameter -= ANIMATION_DIAMETER_DELTA * dt;
         else
             diameter += ANIMATION_DIAMETER_DELTA * dt;
         float diameterDelta = Math.abs(this.diameter/2 - this.finalDiameter/2);
-        float baseDelta = Math.abs(START_ANIMATION_CIRCLE_DIAMETER/2 - this.finalDiameter/2);
+        float baseDelta = Math.abs(startDiameter/2 - this.finalDiameter/2);
         float multiplier = diameterDelta / baseDelta;
         //if(left)
             //this.position.x = this.finalPosition.x - (this.finalPosition.x) * multiplier;
         //else
             this.position.y = this.finalPosition.y + (Gdx.graphics.getHeight() - this.finalPosition.y) * multiplier;
-        if(START_ANIMATION_CIRCLE_DIAMETER >= finalDiameter && diameter <= finalDiameter){
+        if(startDiameter >= finalDiameter && diameter <= finalDiameter){
             diameter = finalDiameter;
             return true;
-        } else if(START_ANIMATION_CIRCLE_DIAMETER < finalDiameter && diameter >= finalDiameter){
+        } else if(startDiameter < finalDiameter && diameter >= finalDiameter){
             diameter = finalDiameter;
             return true;
         } else {
@@ -79,6 +81,6 @@ public class BeatCircleAnimation {
     }
 
     public static float animationDuration(float finalRadius){
-        return (Math.abs(START_ANIMATION_CIRCLE_DIAMETER - finalRadius) / Math.abs(ANIMATION_DIAMETER_DELTA)) * 1000;
+        return (Math.abs((finalRadius / START_ANIMATION_CIRCLE_DIAMETER_FRACTION) - finalRadius) / Math.abs(ANIMATION_DIAMETER_DELTA)) * 1000;
     }
 }

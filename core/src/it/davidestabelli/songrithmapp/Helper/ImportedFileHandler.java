@@ -55,12 +55,15 @@ public class ImportedFileHandler {
             Map<String,Object> fileContentMap = new HashMap<>();
             fileContentMap.put("oggPath", musicElaboratedFile.getOggTarget().path());
             //fileContentMap.put("wavPath", musicElaboratedFile.getWavTarget().path());
+
+            /*
             Map<String,Object> fileSpectrumListMap = new HashMap<>();
             for (int i = 0; i < musicElaboratedFile.getSpectrumList().length; i++) {
                 List<Float> singleSpectrumList = musicElaboratedFile.getSpectrumList()[i];
                 fileSpectrumListMap.put(String.format("%d", i), singleSpectrumList);
             }
             fileContentMap.put("spectrumList", fileSpectrumListMap);
+             */
 
             fileContentMap.put("numberOfTraces", musicElaboratedFile.getNumberOfBeatTraces());
 
@@ -121,7 +124,7 @@ public class ImportedFileHandler {
             Map<String,Object> readedMap = JSONObject.parseObject(content).getInnerMap();
             String oggPath = (String) readedMap.get("oggPath");
             //String wavPath = (String) readedMap.get("wavPath");
-            Map spectrumListMap = (Map) readedMap.get("spectrumList");
+            //Map spectrumListMap = (Map) readedMap.get("spectrumList");
             int[] beatTrace = null;
             if((boolean) readedMap.get("hasBeatTrace")) {
                 JSONArray listArray = (JSONArray)readedMap.get("beatTrace");
@@ -132,7 +135,7 @@ public class ImportedFileHandler {
                 }*/
             }
             Integer numberOfTraces = (Integer) readedMap.get("numberOfTraces");
-            return new MusicConverter(oggPath, spectrumListMap, beatTrace, fileName, numberOfTraces);
+            return new MusicConverter(oggPath, beatTrace, fileName, numberOfTraces);
         }
         catch (Exception e)
         {

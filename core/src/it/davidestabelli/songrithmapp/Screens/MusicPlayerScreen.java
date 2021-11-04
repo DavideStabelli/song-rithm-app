@@ -47,8 +47,8 @@ public class MusicPlayerScreen implements Screen {
     VisLabel fileLabel;
     VisLabel editInfo;
 
-    List<BeatBar> beatBars;
-    float barRefreshTime;
+    //List<BeatBar> beatBars;
+    //float barRefreshTime;
 
     MusicConverter music;
     Music musicFile;
@@ -113,7 +113,7 @@ public class MusicPlayerScreen implements Screen {
         stage.addActor(playPauseButton);
 
         // music slider
-        musicSlider = new BeatSlider(0f, music.getDuration(), 0.01f, false, stage, music.getNumberOfBeatTraces());
+        musicSlider = new BeatSlider(0f, music.getDuration(), 0.01f, false, stage, music.getNumberOfBeatTraces(), music, musicFile);
         musicSlider.addListener(new ClickListener() {
             @Override
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
@@ -189,7 +189,7 @@ public class MusicPlayerScreen implements Screen {
         clearButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 music.clearBeatTrace();
-                musicSlider.updateTags(music, musicFile);
+                musicSlider.updateTags();
             }
         });
         stage.addActor(clearButton);
@@ -208,6 +208,7 @@ public class MusicPlayerScreen implements Screen {
         stage.addActor(backToMenu);
 
         // beat bar
+        /*
         beatBars = new ArrayList<BeatBar>();  
         float barWidth = (Gdx.graphics.getWidth() / (music.getSpectrumList().length + 2));
         float barHeight = (Gdx.graphics.getHeight() / 3) * 2;
@@ -222,10 +223,11 @@ public class MusicPlayerScreen implements Screen {
             beatBars.add(beatBar);
         }      
         barRefreshTime = 0;
+         */
 
         // beat circles
         beatCircles = new BeatCircle[music.getNumberOfBeatTraces() * 2];
-        float diameter = Gdx.graphics.getHeight()/5;
+        float diameter = Gdx.graphics.getHeight()/(4 + (0.5f) * music.getNumberOfBeatTraces());
         for (int i = 0; i < beatCircles.length; i++) {
             boolean isLeft = i%2 == 0;
             float xPosition;
@@ -253,7 +255,7 @@ public class MusicPlayerScreen implements Screen {
         musicSlider.setWidth(Gdx.graphics.getWidth() / 1.5f);
         musicSlider.setPosition(Gdx.graphics.getWidth()/2 - musicSlider.getWidth()/2 , 20);
         musicSlider.setEditMode(false);
-        musicSlider.updateTags(music, musicFile);
+        musicSlider.updateTags();
 
         fileLabel.setSize(40,20);
         fileLabel.setPosition(musicSlider.getX() + musicSlider.getWidth() + 20, musicSlider.getY() - (fileLabel.getHeight() - musicSlider.getHeight()) / 2);
@@ -261,8 +263,10 @@ public class MusicPlayerScreen implements Screen {
         playPauseButton.setSize(40, 40);
         playPauseButton.setPosition(musicSlider.getX() - playPauseButton.getWidth() - 20, musicSlider.getY() - (playPauseButton.getHeight() - musicSlider.getHeight()) / 2);
 
+        /*
         for (BeatBar beatBar : beatBars) 
             beatBar.setHidden(false);
+         */
 
         clearButton.setVisible(false);
     }
@@ -283,10 +287,12 @@ public class MusicPlayerScreen implements Screen {
         musicSlider.setWidth(Gdx.graphics.getWidth() - 10);
         musicSlider.setPosition(5 , playPauseButton.getHeight() + playPauseButton.getY() + 20);
         musicSlider.setEditMode(true);
-        musicSlider.updateTags(music, musicFile);
+        musicSlider.updateTags();
 
+        /*
         for (BeatBar beatBar : beatBars) 
             beatBar.setHidden(true);
+         */
 
         clearButton.setVisible(true);
     }
@@ -319,6 +325,7 @@ public class MusicPlayerScreen implements Screen {
             fileLabel.setText(String.format("%s / %s", stringPosition, music.getStringedDuration()));
 
             // beat bar position
+            /*
             if(!isRec && musicFile.isPlaying()) {
                 barRefreshTime += dt;
                 if (barRefreshTime >= 0.05f) {
@@ -335,6 +342,7 @@ public class MusicPlayerScreen implements Screen {
                     }
                 }
             }
+             */
         }
 
         // pause with space key
@@ -358,21 +366,21 @@ public class MusicPlayerScreen implements Screen {
         if(isRec){
             if(Gdx.input.isKeyJustPressed(game.configs.editLeftBeatKey)){
                 music.setBeatTrace(millisPosition, LEFT_BEAT);
-                musicSlider.updateTags(music, musicFile);
+                musicSlider.updateTags();
             }
             if(Gdx.input.isKeyJustPressed(game.configs.editRightBeatKey)){
                 music.setBeatTrace(millisPosition, RIGHT_BEAT);
-                musicSlider.updateTags(music, musicFile);
+                musicSlider.updateTags();
             }
             if(Gdx.input.isKeyJustPressed(game.configs.deleteBeatKey)){
                 music.setBeatTrace(millisPosition, 0);
-                musicSlider.updateTags(music, musicFile);
+                musicSlider.updateTags();
             }
         }
 
         // slider zoom update
         if(isRec){
-            musicSlider.update(music, millisPosition, dt);
+            musicSlider.update(music);
         }
 
         int beatTrace = music.getBeatTrace(musicSlider.getValue());
@@ -404,9 +412,11 @@ public class MusicPlayerScreen implements Screen {
 
         game.batch.begin();
         game.batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        /*
         if(musicFile.isPlaying())
             for (BeatBar beatBar : beatBars)
                 beatBar.draw(game.batch);
+         */
 
         for (BeatCircle beatCircle : beatCircles)
             beatCircle.draw(game.batch);
