@@ -37,12 +37,12 @@ public class MusicConverter {
 
     private File source;		                 
     private File oggTarget;
-    private File wavTarget;
+    /*private File wavTarget;
     private int oggTargetStatus;
     private int wavTargetStatus;
     private List<Float>[] spectrumList;
     private int spectrumListStatus;
-    private int importStatus;
+    private int importStatus;*/
     private int importingPercentage;
 
     private Long duration; // millis
@@ -98,22 +98,22 @@ public class MusicConverter {
         this.beatTraceDurationRatio = this.beatTrace.length / duration.doubleValue();
         this.durationBeatTraceRatio = duration.doubleValue() / this.beatTrace.length;
 
-        this.oggTargetStatus = FINISH_STATUS;
+        /*this.oggTargetStatus = FINISH_STATUS;
         this.wavTargetStatus = FINISH_STATUS;
         this.spectrumListStatus = FINISH_STATUS;
-        this.importStatus = FINISH_STATUS;
+        this.importStatus = FINISH_STATUS;*/
         this.importingPercentage = 100;
     }
 
     public MusicConverter(File toConvert) {
         this.source = toConvert;
         oggTarget = null;
-        wavTarget = null;
+        /*wavTarget = null;
 
         this.oggTargetStatus = STARTING_STATUS;
         this.wavTargetStatus = STARTING_STATUS;
         this.spectrumListStatus = STARTING_STATUS;
-        this.importStatus = STARTING_STATUS;
+        this.importStatus = STARTING_STATUS;*/
         this.importingPercentage = 0;
 
         this.numberOfBeatTraces = 4;
@@ -125,8 +125,8 @@ public class MusicConverter {
             sourceFormat = sourceObject.getInfo().getFormat();
             fileName = source.getName().split("\\.")[0];
 
-            CountDownLatch latch = new CountDownLatch(2);
-            ExecutorService executor = Executors.newFixedThreadPool(3);
+            CountDownLatch latch = new CountDownLatch(1);
+            ExecutorService executor = Executors.newFixedThreadPool(2);
 
             executor.execute(() -> {
                 if(!sourceFormat.equals("ogg")){
@@ -147,19 +147,19 @@ public class MusicConverter {
                         oggTarget = Files.createTempFile(source.getName().split("\\.")[0], ".ogg").toFile();
                         Encoder encoder = new Encoder();
                         encoder.encode(new MultimediaObject(source), oggTarget, attrs);
-                        this.oggTargetStatus = FINISH_STATUS;
+                        //this.oggTargetStatus = FINISH_STATUS;
                     } catch (Exception e){
                         oggTarget = null;
-                        this.oggTargetStatus = ERROR_STATUS;
+                        //this.oggTargetStatus = ERROR_STATUS;
                     }
                 } else {
                     oggTarget = source;
-                    this.oggTargetStatus = FINISH_STATUS;
+                    ///this.oggTargetStatus = FINISH_STATUS;
                 }
                 this.importingPercentage += 33;
                 latch.countDown();
             });
-
+            /*
             executor.execute(() -> {
                 try {
                     if(!sourceFormat.equals("wav")){
@@ -188,7 +188,7 @@ public class MusicConverter {
                     this.wavTargetStatus = ERROR_STATUS;
                 }
                 this.importingPercentage += 33;
-                /*
+
                 try {
                     WaveDecoder decoder = new WaveDecoder(new FileInputStream(wavTarget));
                     FFT fft = new FFT(1024, 44100);
@@ -220,10 +220,10 @@ public class MusicConverter {
                 }
 
                 this.importingPercentage += 25;
-                */
+
                 latch.countDown();
             });
-
+            */
             executor.execute(() -> {
                 try {
                     latch.await();
@@ -233,15 +233,15 @@ public class MusicConverter {
 
                 ImportedFileHandler.importNewFile(this);
 
-                this.importStatus = FINISH_STATUS;
-                this.importingPercentage += 34;
+                //this.importStatus = FINISH_STATUS;
+                this.importingPercentage += 64;
             });
 
             executor.shutdown();
         } catch (Exception ex) {                                      
             ex.printStackTrace();                                       
             oggTarget = null;   
-            wavTarget = null;                                     
+            //wavTarget = null;
         }
     }
 
@@ -261,14 +261,14 @@ public class MusicConverter {
         return Math.round(rawMillis);
     }
 
-    public void setBeatTrace(float millisPosition, int value){
+    public void setBeatTrace(float millisPosition, int value, boolean add){
         Long index = getBeatTraceIndexFromMillis(millisPosition);
         if(!hasBeatTrace)
             hasBeatTrace = true;
         if(value == 0)
             beatTrace[index.intValue()] = 0;
         else
-            beatTrace[index.intValue()] = (value | beatTrace[index.intValue()]);
+            beatTrace[index.intValue()] = add ? (value | beatTrace[index.intValue()]) : value;
     }
 
     public int getBeatTrace(float millisPosition){
@@ -302,19 +302,19 @@ public class MusicConverter {
     public FileHandle getOggTarget() {
         return new FileHandle(oggTarget);
     }
-
+/*
     public FileHandle getWavTarget() {
         return new FileHandle(wavTarget);
     }
-
+*/
     public Long getDuration() {
         return duration;
     }
-
+/*
     public List[] getSpectrumList() {
         return spectrumList;
     }
-
+*/
     public String getFileName() {
         return fileName;
     }

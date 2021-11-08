@@ -4,11 +4,13 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.kotcrab.vis.ui.widget.VisRadioButton;
 import com.kotcrab.vis.ui.widget.VisSlider;
 import it.davidestabelli.songrithmapp.Helper.MusicConverter;
 
 public class BeatSlider extends VisSlider {
     private BeatRoll[] beatRolls;
+    private VisRadioButton[] barSelector;
 
     private MusicConverter music;
     private Music musicFile;
@@ -22,9 +24,20 @@ public class BeatSlider extends VisSlider {
         this.musicFile = musicFile;
 
         beatRolls = new BeatRoll[beatNumber];
+        barSelector = new VisRadioButton[beatNumber];
         editMode = false;
         for (int i = 0; i < beatRolls.length; i++) {
-            beatRolls[i] = new BeatRoll(i, max, min);
+            barSelector[i] = new VisRadioButton("");
+            barSelector[i].addListener(new ClickListener() {
+                public void clicked(InputEvent event, float x, float y) {
+                    for(VisRadioButton selector : barSelector)
+                        selector.setChecked(false);
+                    VisRadioButton selector = (VisRadioButton) event.getListenerActor();
+                    selector.setChecked(true);
+                }
+            });
+
+            beatRolls[i] = new BeatRoll(i, barSelector[i], max, min);
             beatRolls[i].addTagClickAction(new ClickListener() {
                 public void clicked(InputEvent event, float x, float y) {
                     musicFile.pause();
@@ -34,8 +47,11 @@ public class BeatSlider extends VisSlider {
                     musicFile.setPosition(millis / 1000f);
                 }
             });
+
             stage.addActor(beatRolls[i]);
         }
+
+        barSelector[0].setChecked(true);
         stage.addActor(this);
     }
 
@@ -60,6 +76,14 @@ public class BeatSlider extends VisSlider {
             BeatRoll beatRoll = beatRolls[i];
             beatRoll.update(music, getValue());
         }
+    }
+
+    public int getSelectedBeatIndex(){
+        for (int i = 0; i < barSelector.length; i++) {
+            if(barSelector[i].isChecked())
+                return i;
+        }
+        return 0;
     }
 
     public void setEditMode(boolean editMode){

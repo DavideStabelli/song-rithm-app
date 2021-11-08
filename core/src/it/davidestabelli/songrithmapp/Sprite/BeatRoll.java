@@ -4,14 +4,20 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.kotcrab.vis.ui.widget.VisImage;
+import com.kotcrab.vis.ui.widget.VisLabel;
+import com.kotcrab.vis.ui.widget.VisRadioButton;
 import com.kotcrab.vis.ui.widget.VisTextField;
 import com.kotcrab.vis.ui.widget.color.ColorPicker;
 import com.kotcrab.vis.ui.widget.color.ColorPickerListener;
 import it.davidestabelli.songrithmapp.Helper.MusicConverter;
+
+import java.awt.*;
 
 public class BeatRoll extends Group {
     public static final float MENU_BAR_HEIGHT = BeatRollTile.DEFAULT_TAG_HEIGHT/3.5f;
@@ -30,13 +36,15 @@ public class BeatRoll extends Group {
 
     private Group menuBar;
     private VisTextField barName;
-    private VisImage editNameButton;
+    private VisLabel barNameLabel;
+    //private VisImage editNameButton;
     private VisImage deleteButton;
     private VisImage changeColorButton;
     private ColorPicker colorPicker;
     private Color color;
+    private VisRadioButton selector;
 
-    public BeatRoll(int beatTraceIndex, float maxValue, float minValue) {
+    public BeatRoll(int beatTraceIndex, VisRadioButton selector, float maxValue, float minValue) {
 
         tagSelectionTexture = new Texture("beat_slider_zoom_tile_selection.png");
         tagCursorTexture = new Texture("cursor.png");
@@ -50,32 +58,56 @@ public class BeatRoll extends Group {
         this.callableTagClickEvent = null;
 
         this.name = "";
+        this.color = Color.WHITE;
 
         this.menuBar = new Group();
         menuBar.setPosition(0, BeatRollTile.DEFAULT_TAG_HEIGHT);
         menuBar.setWidth(Gdx.graphics.getWidth());
 
+        this.selector = selector;
+        this.selector.setPosition(0,0);
+        this.selector.setSize(MENU_BAR_HEIGHT,MENU_BAR_HEIGHT);
+        menuBar.addActor(this.selector);
+
         this.barName = new VisTextField(name);
-        barName.setPosition(0,0);
-        barName.setSize(100, MENU_BAR_HEIGHT);
-        barName.setDisabled(true);
+        barName.setPosition(selector.getX() + selector.getWidth() + MENU_BAR_HEIGHT,0);
+        barName.setSize(300, MENU_BAR_HEIGHT);
+        barName.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                //barName.setReadOnly(!barName.isReadOnly());
+                if(barName.isVisible())
+                    name = barName.getText();
+            }
+        });
         menuBar.addActor(barName);
 
+        this.barNameLabel = new VisLabel(name);
+        barNameLabel.setPosition(selector.getX() + selector.getWidth() + MENU_BAR_HEIGHT,0);
+        barNameLabel.setSize(300, MENU_BAR_HEIGHT);
+        barNameLabel.setVisible(false);
+        barNameLabel.setColor(color);
+        menuBar.addActor(barNameLabel);
+
+        /*
         this.editNameButton = new VisImage();
         editNameButton.setDrawable(new Texture("edit.png"));
         editNameButton.setSize(MENU_BAR_HEIGHT,MENU_BAR_HEIGHT);
         editNameButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                barName.setDisabled(!barName.isDisabled());
+                barName.setReadOnly(!barName.isReadOnly());
+                if(barName.isReadOnly())
+                    name = barName.getText();
             }
         });
         editNameButton.setPosition(barName.getX() + barName.getWidth() + MENU_BAR_HEIGHT, 0);
         menuBar.addActor(editNameButton);
+         */
 
         this.deleteButton = new VisImage();
         deleteButton.setDrawable(new Texture("exit.png"));
         deleteButton.setSize(MENU_BAR_HEIGHT,MENU_BAR_HEIGHT);
-        deleteButton.setPosition(editNameButton.getX() + editNameButton.getWidth() + MENU_BAR_HEIGHT, 0);
+        deleteButton.setPosition(barName.getX() + barName.getWidth() + MENU_BAR_HEIGHT, 0);
         menuBar.addActor(deleteButton);
 
         this.changeColorButton = new VisImage();
@@ -162,5 +194,26 @@ public class BeatRoll extends Group {
         if (getX() > 0)
             setX(0);
 
+        barNameLabel.setColor(this.color);
+        barNameLabel.setText(name);
+
+        selector.setColor(this.color);
+        changeColorButton.setColor(this.color);
+        //editNameButton.setColor(this.color);
+        deleteButton.setColor(this.color);
+
+        if(!selector.isChecked()){
+            barName.setVisible(false);
+            barNameLabel.setVisible(true);
+            changeColorButton.setVisible(false);
+            //editNameButton.setVisible(false);
+            deleteButton.setVisible(false);
+        } else {
+            barName.setVisible(true);
+            barNameLabel.setVisible(false);
+            changeColorButton.setVisible(true);
+            //editNameButton.setVisible(true);
+            deleteButton.setVisible(true);
+        }
     }
 }

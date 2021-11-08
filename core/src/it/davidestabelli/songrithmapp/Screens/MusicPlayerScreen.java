@@ -185,7 +185,7 @@ public class MusicPlayerScreen implements Screen {
         // clear beat button
         clearButton = new VisImage(clearButtonTexture);
         clearButton.setSize(50, 50);
-        clearButton.setPosition(Gdx.graphics.getWidth() - clearButton.getWidth() - 20, recButton.getY() - clearButton.getHeight() - 20);
+        clearButton.setPosition(recButton.getX() - clearButton.getWidth() - 20, recButton.getY());
         clearButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 music.clearBeatTrace();
@@ -361,19 +361,25 @@ public class MusicPlayerScreen implements Screen {
         }
 
         long millisPosition = Math.round(musicFile.getPosition() * 1000);
+        int beatTrace = music.getBeatTrace(musicSlider.getValue());
 
         // rec update
         if(isRec){
+
             if(Gdx.input.isKeyJustPressed(game.configs.editLeftBeatKey)){
-                music.setBeatTrace(millisPosition, LEFT_BEAT);
+                music.setBeatTrace(millisPosition, LEFT_BEAT << (2*musicSlider.getSelectedBeatIndex()), true);
                 musicSlider.updateTags();
             }
             if(Gdx.input.isKeyJustPressed(game.configs.editRightBeatKey)){
-                music.setBeatTrace(millisPosition, RIGHT_BEAT);
+                music.setBeatTrace(millisPosition, RIGHT_BEAT  << (2*musicSlider.getSelectedBeatIndex()), true);
                 musicSlider.updateTags();
             }
             if(Gdx.input.isKeyJustPressed(game.configs.deleteBeatKey)){
-                music.setBeatTrace(millisPosition, 0);
+                int value = LEFT_BEAT + RIGHT_BEAT;
+                value = value << (2*musicSlider.getSelectedBeatIndex());
+                value = value ^ 255;
+                value = beatTrace & value;
+                music.setBeatTrace(millisPosition, value, false);
                 musicSlider.updateTags();
             }
         }
@@ -382,8 +388,6 @@ public class MusicPlayerScreen implements Screen {
         if(isRec){
             musicSlider.update(music);
         }
-
-        int beatTrace = music.getBeatTrace(musicSlider.getValue());
 
         for (int i = 0; i < beatCircles.length; i++) {
             // set beat cirle activation
