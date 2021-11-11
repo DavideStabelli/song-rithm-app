@@ -2,6 +2,7 @@ package it.davidestabelli.songrithmapp.Helper;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.badlogic.gdx.graphics.Color;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,28 +43,12 @@ public class ImportedFileHandler {
             if(!musicElaboratedFile.getOggTarget().path().equals(oggLocalFile.getPath()))
                 Files.copy(musicElaboratedFile.getOggTarget().file().toPath(), oggLocalFile.toPath());
 
-                /*
-            String wavFilePathString = localPathString + "/" + musicElaboratedFile.getFileName() + ".wav";
-            File wavLocalFile = new File(wavFilePathString);
-            if(!musicElaboratedFile.getWavTarget().path().equals(wavLocalFile.getPath()))
-                Files.copy(musicElaboratedFile.getWavTarget().file().toPath(), wavLocalFile.toPath());
-                */
             String dataFilePathString = localPathString + "/" + musicElaboratedFile.getFileName() + ".json";
             File dataLocalFile = new File(dataFilePathString);
             FileOutputStream outputStream = new FileOutputStream(dataLocalFile);
 
             Map<String,Object> fileContentMap = new HashMap<>();
             fileContentMap.put("oggPath", musicElaboratedFile.getOggTarget().path());
-            //fileContentMap.put("wavPath", musicElaboratedFile.getWavTarget().path());
-
-            /*
-            Map<String,Object> fileSpectrumListMap = new HashMap<>();
-            for (int i = 0; i < musicElaboratedFile.getSpectrumList().length; i++) {
-                List<Float> singleSpectrumList = musicElaboratedFile.getSpectrumList()[i];
-                fileSpectrumListMap.put(String.format("%d", i), singleSpectrumList);
-            }
-            fileContentMap.put("spectrumList", fileSpectrumListMap);
-             */
 
             fileContentMap.put("numberOfTraces", musicElaboratedFile.getNumberOfBeatTraces());
 
@@ -71,6 +56,14 @@ public class ImportedFileHandler {
 
             if(musicElaboratedFile.hasBeatTrace())
                 fileContentMap.put("beatTrace", musicElaboratedFile.getBeatTrace());
+
+            String[] colorCodes = new String[musicElaboratedFile.getNumberOfBeatTraces()];
+            for (int i = 0; i < musicElaboratedFile.getNumberOfBeatTraces(); i++) {
+                colorCodes[i] = musicElaboratedFile.getBeatTraceColor()[i].toString();
+            }
+            fileContentMap.put("beatTraceColor", colorCodes);
+
+            fileContentMap.put("beatTraceNames", musicElaboratedFile.getBeatTraceNames());
 
             JSONObject fileContent = new JSONObject(fileContentMap);
             outputStream.write(fileContent.toString().getBytes());
@@ -92,6 +85,13 @@ public class ImportedFileHandler {
             readedMap.put("hasBeatTrace", music.hasBeatTrace());
             if(music.hasBeatTrace())
                 readedMap.put("beatTrace", music.getBeatTrace());
+
+            String[] colorCodes = new String[music.getNumberOfBeatTraces()];
+            for (int i = 0; i < music.getNumberOfBeatTraces(); i++) {
+                colorCodes[i] = music.getBeatTraceColor()[i].toString();
+            }
+            readedMap.put("beatTraceColor", colorCodes);
+            readedMap.put("beatTraceNames", music.getBeatTraceNames());
 
             FileOutputStream outputStream = new FileOutputStream(dataLocalFile);
             JSONObject fileContent = new JSONObject(readedMap);
@@ -123,19 +123,20 @@ public class ImportedFileHandler {
             String content = new String ( Files.readAllBytes( Paths.get(filePath) ) );
             Map<String,Object> readedMap = JSONObject.parseObject(content).getInnerMap();
             String oggPath = (String) readedMap.get("oggPath");
-            //String wavPath = (String) readedMap.get("wavPath");
-            //Map spectrumListMap = (Map) readedMap.get("spectrumList");
             int[] beatTrace = null;
             if((boolean) readedMap.get("hasBeatTrace")) {
                 JSONArray listArray = (JSONArray)readedMap.get("beatTrace");
                 beatTrace = listArray.stream().filter(i -> i instanceof Integer).mapToInt(e -> (int) e).toArray();
-                /*beatTrace = new int[listArray.size()];
-                for (int i = 0; i < listArray.size(); i++) {
-                    beatTrace[i] = listArray.getInteger(i).intValue();
-                }*/
             }
             Integer numberOfTraces = (Integer) readedMap.get("numberOfTraces");
-            return new MusicConverter(oggPath, beatTrace, fileName, numberOfTraces);
+
+            JSONArray listArray = (JSONArray)readedMap.get("beatTraceColor");
+            Color[] beatTraceColor = listArray.stream().filter(i -> i instanceof String).map(e -> Color.valueOf((String) e)).collect(Collectors.toList()).toArray(new Color[0]);
+
+            listArray = (JSONArray)readedMap.get("beatTraceNames");
+            String[] beatTraceNames = listArray.stream().filter(i -> i instanceof String).map(e -> (String) e).collect(Collectors.toList()).toArray(new String[0]);
+
+            return new MusicConverter(oggPath, beatTrace, fileName, numberOfTraces, beatTraceColor, beatTraceNames);
         }
         catch (Exception e)
         {

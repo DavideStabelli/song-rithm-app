@@ -28,7 +28,7 @@ public class BeatCircleAnimation {
         this.texture = new Texture("outer_circle.png");
 
         this.circleRenderer = new ShapeRenderer();
-        circleRenderer.setColor(Color.BLACK);
+        circleRenderer.setColor(Color.WHITE);
         Gdx.gl.glLineWidth(3);
 
         this.finalPosition = position;
@@ -82,5 +82,9 @@ public class BeatCircleAnimation {
 
     public static float animationDuration(float finalRadius){
         return (Math.abs((finalRadius / START_ANIMATION_CIRCLE_DIAMETER_FRACTION) - finalRadius) / Math.abs(ANIMATION_DIAMETER_DELTA)) * 1000;
+    }
+
+    public void setColor(Color color){
+        this.circleRenderer.setColor(color);
     }
 }

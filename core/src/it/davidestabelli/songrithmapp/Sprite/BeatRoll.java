@@ -31,20 +31,17 @@ public class BeatRoll extends Group {
     private int beatTraceIndex;
     private float maxValue;
     private float minValue;
-    private String name;
     private ClickListener callableTagClickEvent;
 
     private Group menuBar;
     private VisTextField barName;
     private VisLabel barNameLabel;
-    //private VisImage editNameButton;
     private VisImage deleteButton;
     private VisImage changeColorButton;
     private ColorPicker colorPicker;
-    private Color color;
     private VisRadioButton selector;
 
-    public BeatRoll(int beatTraceIndex, VisRadioButton selector, float maxValue, float minValue) {
+    public BeatRoll(int beatTraceIndex, VisRadioButton selector, float maxValue, float minValue, BeatSlider parentSlider) {
 
         tagSelectionTexture = new Texture("beat_slider_zoom_tile_selection.png");
         tagCursorTexture = new Texture("cursor.png");
@@ -57,9 +54,6 @@ public class BeatRoll extends Group {
         this.minValue = minValue;
         this.callableTagClickEvent = null;
 
-        this.name = "";
-        this.color = Color.WHITE;
-
         this.menuBar = new Group();
         menuBar.setPosition(0, BeatRollTile.DEFAULT_TAG_HEIGHT);
         menuBar.setWidth(Gdx.graphics.getWidth());
@@ -69,45 +63,35 @@ public class BeatRoll extends Group {
         this.selector.setSize(MENU_BAR_HEIGHT,MENU_BAR_HEIGHT);
         menuBar.addActor(this.selector);
 
-        this.barName = new VisTextField(name);
+        this.barName = new VisTextField(parentSlider.getMusic().getBeatTraceNames()[beatTraceIndex]);
         barName.setPosition(selector.getX() + selector.getWidth() + MENU_BAR_HEIGHT,0);
         barName.setSize(300, MENU_BAR_HEIGHT);
         barName.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                //barName.setReadOnly(!barName.isReadOnly());
                 if(barName.isVisible())
-                    name = barName.getText();
+                    parentSlider.getMusic().setBeatTraceNames(barName.getText(), beatTraceIndex);
             }
         });
         menuBar.addActor(barName);
 
-        this.barNameLabel = new VisLabel(name);
+        this.barNameLabel = new VisLabel(parentSlider.getMusic().getBeatTraceNames()[beatTraceIndex]);
         barNameLabel.setPosition(selector.getX() + selector.getWidth() + MENU_BAR_HEIGHT,0);
         barNameLabel.setSize(300, MENU_BAR_HEIGHT);
         barNameLabel.setVisible(false);
-        barNameLabel.setColor(color);
+        barNameLabel.setColor(parentSlider.getMusic().getBeatTraceColor()[beatTraceIndex]);
         menuBar.addActor(barNameLabel);
-
-        /*
-        this.editNameButton = new VisImage();
-        editNameButton.setDrawable(new Texture("edit.png"));
-        editNameButton.setSize(MENU_BAR_HEIGHT,MENU_BAR_HEIGHT);
-        editNameButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
-                barName.setReadOnly(!barName.isReadOnly());
-                if(barName.isReadOnly())
-                    name = barName.getText();
-            }
-        });
-        editNameButton.setPosition(barName.getX() + barName.getWidth() + MENU_BAR_HEIGHT, 0);
-        menuBar.addActor(editNameButton);
-         */
 
         this.deleteButton = new VisImage();
         deleteButton.setDrawable(new Texture("exit.png"));
         deleteButton.setSize(MENU_BAR_HEIGHT,MENU_BAR_HEIGHT);
         deleteButton.setPosition(barName.getX() + barName.getWidth() + MENU_BAR_HEIGHT, 0);
+        deleteButton.addListener(new ClickListener() {
+            public void clicked(InputEvent event, float x, float y) {
+                parentSlider.getMusic().deleteBeatTrace(beatTraceIndex);
+                parentSlider.resetRolls();
+            }
+        });
         menuBar.addActor(deleteButton);
 
         this.changeColorButton = new VisImage();
@@ -122,25 +106,26 @@ public class BeatRoll extends Group {
         menuBar.addActor(changeColorButton);
 
         this.colorPicker = new ColorPicker();
+        colorPicker.setColor(parentSlider.getMusic().getBeatTraceColor()[beatTraceIndex]);
         colorPicker.setListener(new ColorPickerListener() {
             @Override
             public void canceled(Color oldColor) {
-                color = oldColor;
+                parentSlider.getMusic().setBeatTraceColor(oldColor, beatTraceIndex);
             }
 
             @Override
             public void changed(Color newColor) {
-                color = newColor;
+                parentSlider.getMusic().setBeatTraceColor(newColor, beatTraceIndex);
             }
 
             @Override
             public void reset(Color previousColor, Color newColor) {
-                color = newColor;
+                parentSlider.getMusic().setBeatTraceColor(newColor, beatTraceIndex);
             }
 
             @Override
             public void finished(Color newColor) {
-                color = newColor;
+                parentSlider.getMusic().setBeatTraceColor(newColor, beatTraceIndex);
             }
         });
         colorPicker.centerWindow();
@@ -194,25 +179,22 @@ public class BeatRoll extends Group {
         if (getX() > 0)
             setX(0);
 
-        barNameLabel.setColor(this.color);
-        barNameLabel.setText(name);
+        barNameLabel.setColor(music.getBeatTraceColor()[beatTraceIndex]);
+        barNameLabel.setText(music.getBeatTraceNames()[beatTraceIndex]);
 
-        selector.setColor(this.color);
-        changeColorButton.setColor(this.color);
-        //editNameButton.setColor(this.color);
-        deleteButton.setColor(this.color);
+        selector.setColor(music.getBeatTraceColor()[beatTraceIndex]);
+        changeColorButton.setColor(music.getBeatTraceColor()[beatTraceIndex]);
+        deleteButton.setColor(music.getBeatTraceColor()[beatTraceIndex]);
 
         if(!selector.isChecked()){
             barName.setVisible(false);
             barNameLabel.setVisible(true);
             changeColorButton.setVisible(false);
-            //editNameButton.setVisible(false);
             deleteButton.setVisible(false);
         } else {
             barName.setVisible(true);
             barNameLabel.setVisible(false);
             changeColorButton.setVisible(true);
-            //editNameButton.setVisible(true);
             deleteButton.setVisible(true);
         }
     }

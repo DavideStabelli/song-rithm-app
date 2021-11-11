@@ -113,7 +113,7 @@ public class MusicPlayerScreen implements Screen {
         stage.addActor(playPauseButton);
 
         // music slider
-        musicSlider = new BeatSlider(0f, music.getDuration(), 0.01f, false, stage, music.getNumberOfBeatTraces(), music, musicFile);
+        musicSlider = new BeatSlider(0f, music.getDuration(), 0.01f, false, stage, music, musicFile);
         musicSlider.addListener(new ClickListener() {
             @Override
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
@@ -226,6 +226,12 @@ public class MusicPlayerScreen implements Screen {
          */
 
         // beat circles
+        resetBeatCircles();
+
+        setStageActorsForPlay();
+    }
+
+    public void resetBeatCircles(){
         beatCircles = new BeatCircle[music.getNumberOfBeatTraces() * 2];
         float diameter = Gdx.graphics.getHeight()/(4 + (0.5f) * music.getNumberOfBeatTraces());
         for (int i = 0; i < beatCircles.length; i++) {
@@ -238,11 +244,6 @@ public class MusicPlayerScreen implements Screen {
             }
             beatCircles[i] = new BeatCircle(new Vector2(xPosition,Gdx.graphics.getHeight()/4), diameter, isLeft);
         }
-        /*
-        leftBeatCircle = new BeatCircle(new Vector2((Gdx.graphics.getWidth()/2) - Gdx.graphics.getHeight()/10, Gdx.graphics.getHeight()/4), Gdx.graphics.getHeight()/5, true);
-        rightBeatCircle = new BeatCircle(new Vector2((Gdx.graphics.getWidth()/2) + Gdx.graphics.getHeight()/10, Gdx.graphics.getHeight()/4), Gdx.graphics.getHeight()/5, false);
-        */
-        setStageActorsForPlay();
     }
 
     private void setStageActorsForPlay(){
@@ -392,6 +393,7 @@ public class MusicPlayerScreen implements Screen {
         for (int i = 0; i < beatCircles.length; i++) {
             // set beat cirle activation
             BeatCircle beatCircle = beatCircles[i];
+            beatCircle.setColor(music.getBeatTraceColor()[i/2]);
             if((beatTrace & (1 << i)) == (1 << i) && musicFile.isPlaying())
                 beatCircle.setActive(true);
             else

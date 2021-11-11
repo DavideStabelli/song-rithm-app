@@ -16,16 +16,26 @@ public class BeatSlider extends VisSlider {
     private Music musicFile;
 
     private boolean editMode;
+    private Stage stage;
 
-    public BeatSlider(float min, float max, float stepSize, boolean vertical, Stage stage, int beatNumber, MusicConverter music, Music musicFile) {
+    public BeatSlider(float min, float max, float stepSize, boolean vertical, Stage stage, MusicConverter music, Music musicFile) {
         super(min, max, stepSize, vertical);
 
         this.music = music;
         this.musicFile = musicFile;
 
-        beatRolls = new BeatRoll[beatNumber];
-        barSelector = new VisRadioButton[beatNumber];
-        editMode = false;
+        this.editMode = false;
+        this.stage = stage;
+
+        resetRolls();
+
+        stage.addActor(this);
+    }
+
+    public void resetRolls(){
+        int beatNumber = music.getNumberOfBeatTraces();
+        this.beatRolls = new BeatRoll[beatNumber];
+        this.barSelector = new VisRadioButton[beatNumber];
         for (int i = 0; i < beatRolls.length; i++) {
             barSelector[i] = new VisRadioButton("");
             barSelector[i].addListener(new ClickListener() {
@@ -37,7 +47,7 @@ public class BeatSlider extends VisSlider {
                 }
             });
 
-            beatRolls[i] = new BeatRoll(i, barSelector[i], max, min);
+            beatRolls[i] = new BeatRoll(i, barSelector[i], getMaxValue(), getMinValue(), this);
             beatRolls[i].addTagClickAction(new ClickListener() {
                 public void clicked(InputEvent event, float x, float y) {
                     musicFile.pause();
@@ -45,6 +55,10 @@ public class BeatSlider extends VisSlider {
                     long millis = music.getMillisFromBeatTraceIndex(tag.getSliderIndex());
                     setValue(millis);
                     musicFile.setPosition(millis / 1000f);
+
+                    for(VisRadioButton selector : barSelector)
+                        selector.setChecked(false);
+                    barSelector[tag.getBeatTraceIndex()].setChecked(true);
                 }
             });
 
@@ -52,7 +66,6 @@ public class BeatSlider extends VisSlider {
         }
 
         barSelector[0].setChecked(true);
-        stage.addActor(this);
     }
 
     @Override
@@ -88,5 +101,9 @@ public class BeatSlider extends VisSlider {
 
     public void setEditMode(boolean editMode){
         this.editMode = editMode;
+    }
+
+    public MusicConverter getMusic() {
+        return music;
     }
 }

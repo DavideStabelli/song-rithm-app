@@ -11,6 +11,7 @@ public class BeatRollTile extends VisImage {
     public static final int DEFAULT_TAG_HEIGHT = Gdx.graphics.getHeight() / 8;
 
     private int sliderIndex;
+    private int beatTraceIndex;
 
     private static Texture tagTexture = new Texture("beat_slider_zoom_tile.png");
     private static Texture tagUpTexture = new Texture("beat_slider_zoom_tile_up.png");
@@ -30,6 +31,7 @@ public class BeatRollTile extends VisImage {
             setDrawable(tagTexture);
 
         this.sliderIndex = tagIndex;
+        this.beatTraceIndex = beatTraceIndex;
         this.setSize(DEFAULT_TAG_WIDTH, DEFAULT_TAG_HEIGHT);
         this.setY(0);
         this.setX(sliderIndex * DEFAULT_TAG_WIDTH);
@@ -40,5 +42,9 @@ public class BeatRollTile extends VisImage {
 
     public int getSliderIndex() {
         return sliderIndex;
+    }
+
+    public int getBeatTraceIndex() {
+        return beatTraceIndex;
     }
 }

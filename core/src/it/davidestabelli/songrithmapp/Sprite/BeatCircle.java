@@ -43,10 +43,6 @@ public class BeatCircle{
         this.position = position;
         this.radius = radius;
         this.active = false;
-        /*this.effect = new ParticleEffect();
-        this.effect.load(Gdx.files.internal("circle_hit_particles"), Gdx.files.internal(""));
-        this.effect.setPosition(position.x,position.y);
-        this.isEffectRunning = false;*/
 
         this.particleEffects = new ArrayList<ParticleEffect>();
         this.circleAnimations = new ArrayList<BeatCircleAnimation>();
@@ -80,19 +76,8 @@ public class BeatCircle{
         if(!hidden){
             batch.end();
             if(active){
-                /*batch.draw(innerTexture,
-                        position.x - radius/2,
-                        position.y - radius/2,
-                        radius,
-                        radius);*/
                 circleRenderer.begin(ShapeType.Filled);
             } else {
-                /*batch.draw(outerTexture,
-                        position.x - radius/2,
-                        position.y - radius/2,
-                        radius,
-                        radius);
-                        batch.end();*/
                 circleRenderer.begin(ShapeType.Line);
                 
             }
@@ -127,15 +112,9 @@ public class BeatCircle{
 
     public void setPosition(Vector2 position) {
         this.position = position;
-        //effect.setPosition(position.x,position.y);
     }
 
     public void setActivateEffect(boolean activateEffect) {
-        if(activateEffect && !this.activateEffect){
-
-        } else if(!activateEffect && this.activateEffect){
-            //effect.setPosition(position.x,position.y);
-        }
         this.activateEffect = activateEffect;
     }
 
@@ -147,8 +126,11 @@ public class BeatCircle{
                 break;
             }
         }
-        if(!exist)
-            circleAnimations.add(new BeatCircleAnimation(position, radius, id, left));
+        if(!exist) {
+            BeatCircleAnimation animation = new BeatCircleAnimation(position, radius, id, left);
+            animation.setColor(circleRenderer.getColor());
+            circleAnimations.add(animation);
+        }
     }
 
     public void addParticleEffect(){
@@ -163,11 +145,12 @@ public class BeatCircle{
         return animationDuration;
     }
 
-    public boolean isHidden() {
-        return hidden;
-    }
-
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
-    }    
+    }
+
+    public void setColor(Color color){
+        circleRenderer.setColor(color);
+
+    }
 }

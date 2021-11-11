@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import com.alibaba.fastjson.JSONArray;
 import com.badlogic.gdx.files.FileHandle;
 
+import com.badlogic.gdx.graphics.Color;
 import it.davidestabelli.songrithmapp.Helper.FFT.FFT;
 import it.davidestabelli.songrithmapp.Helper.FFT.WaveDecoder;
 import ws.schild.jave.Encoder;
@@ -27,22 +28,11 @@ import ws.schild.jave.encode.EncodingAttributes;
 
 @SuppressWarnings("NewApi")
 public class MusicConverter {
-    private static final int NUMBER_OF_SPECTRUMS = 19;
     private static final float BEAT_TRACE_SAMPLE = 0.11f;
     public static final DateTimeFormatter AUDIO_FORMAT = DateTimeFormatter.ofPattern("mm:ss");
 
-    public static final int FINISH_STATUS = 1;
-    public static final int STARTING_STATUS = 0;
-    public static final int ERROR_STATUS = 2;
-
     private File source;		                 
     private File oggTarget;
-    /*private File wavTarget;
-    private int oggTargetStatus;
-    private int wavTargetStatus;
-    private List<Float>[] spectrumList;
-    private int spectrumListStatus;
-    private int importStatus;*/
     private int importingPercentage;
 
     private Long duration; // millis
@@ -58,21 +48,11 @@ public class MusicConverter {
     private double beatTraceDurationRatio;
     private double durationBeatTraceRatio;
     private int numberOfBeatTraces;
+    private Color[] beatTraceColor;
+    private String[] beatTraceNames;
 
-    public MusicConverter(String oggPath, int[] beatTrace, String name, int numberOfBeatTraces) throws EncoderException {
+    public MusicConverter(String oggPath, int[] beatTrace, String name, int numberOfBeatTraces, Color[] beatTraceColor, String[] beatTraceNames) throws EncoderException {
         this.oggTarget = new File(oggPath);
-        //this.wavTarget = new File(wavPath);
-        /*this.spectrumList = new List[NUMBER_OF_SPECTRUMS];
-        for (int i = 0; i < this.spectrumList.length; i++) {
-            JSONArray mapArray = (JSONArray)spectrumListMap.get(String.format("%d",i));
-            List<Float> spectrum = mapArray.parallelStream().filter(entry -> entry instanceof BigDecimal).map(e -> ((BigDecimal) e).floatValue()).collect(Collectors.toList());
-            //List<Float> spectrum = new ArrayList<Float>();
-            //for (Object value : mapArray) {
-            //    BigDecimal decimalValue = (BigDecimal) value;
-            //    spectrum.add(decimalValue.floatValue());
-            //}
-            this.spectrumList[i] = spectrum;
-        }*/
 
         //Getting infos
         MultimediaObject sourceObject = new MultimediaObject(oggTarget);
@@ -98,25 +78,25 @@ public class MusicConverter {
         this.beatTraceDurationRatio = this.beatTrace.length / duration.doubleValue();
         this.durationBeatTraceRatio = duration.doubleValue() / this.beatTrace.length;
 
-        /*this.oggTargetStatus = FINISH_STATUS;
-        this.wavTargetStatus = FINISH_STATUS;
-        this.spectrumListStatus = FINISH_STATUS;
-        this.importStatus = FINISH_STATUS;*/
         this.importingPercentage = 100;
+
+        this.beatTraceColor = beatTraceColor;
+        this.beatTraceNames = beatTraceNames;
     }
 
     public MusicConverter(File toConvert) {
         this.source = toConvert;
         oggTarget = null;
-        /*wavTarget = null;
 
-        this.oggTargetStatus = STARTING_STATUS;
-        this.wavTargetStatus = STARTING_STATUS;
-        this.spectrumListStatus = STARTING_STATUS;
-        this.importStatus = STARTING_STATUS;*/
         this.importingPercentage = 0;
-
         this.numberOfBeatTraces = 4;
+
+        this.beatTraceColor = new Color[numberOfBeatTraces];
+        this.beatTraceNames = new String[numberOfBeatTraces];
+        for (int i = 0; i < numberOfBeatTraces; i++) {
+            beatTraceColor[i] = Color.WHITE;
+            beatTraceNames[i] = "";
+        }
 
         try {
             //Getting infos
@@ -147,83 +127,16 @@ public class MusicConverter {
                         oggTarget = Files.createTempFile(source.getName().split("\\.")[0], ".ogg").toFile();
                         Encoder encoder = new Encoder();
                         encoder.encode(new MultimediaObject(source), oggTarget, attrs);
-                        //this.oggTargetStatus = FINISH_STATUS;
                     } catch (Exception e){
                         oggTarget = null;
-                        //this.oggTargetStatus = ERROR_STATUS;
                     }
                 } else {
                     oggTarget = source;
-                    ///this.oggTargetStatus = FINISH_STATUS;
                 }
                 this.importingPercentage += 33;
                 latch.countDown();
             });
-            /*
-            executor.execute(() -> {
-                try {
-                    if(!sourceFormat.equals("wav")){
-                        //Audio Attributes
-                        AudioAttributes audio = new AudioAttributes();
-                        audio.setCodec("pcm_s16le");
-                        audio.setChannels(2);
-                        audio.setSamplingRate(44100);
 
-                        //Encoding attributes
-                        EncodingAttributes attrs = new EncodingAttributes();
-                        attrs.setOutputFormat("wav");
-                        attrs.setAudioAttributes(audio);
-                        attrs.setMapMetaData(true);
-
-                        //Encoder
-                        wavTarget = Files.createTempFile(source.getName().split("\\.")[0], ".wav").toFile();
-                        Encoder encoder = new Encoder();
-                        encoder.encode(new MultimediaObject(source), wavTarget, attrs);
-                    } else {
-                        wavTarget = source;
-                    }
-                    this.wavTargetStatus = FINISH_STATUS;
-                } catch (Exception e){
-                    wavTarget = null;
-                    this.wavTargetStatus = ERROR_STATUS;
-                }
-                this.importingPercentage += 33;
-
-                try {
-                    WaveDecoder decoder = new WaveDecoder(new FileInputStream(wavTarget));
-                    FFT fft = new FFT(1024, 44100);
-
-                    float[] samples = new float[1024];
-                    float[] spectrum = new float[1024 / 2 + 1];
-                    spectrumList = new List[NUMBER_OF_SPECTRUMS];
-                    while (decoder.readSamples(samples) > 0) {
-                        fft.forward(samples);
-                        spectrum = fft.getSpectrum();
-
-                        int samplesPerSpectrum = spectrum.length / NUMBER_OF_SPECTRUMS;
-
-                        for (int i = 0; i < NUMBER_OF_SPECTRUMS; i++) {
-                            float spectrumValueSum = 0;
-                            for (int j = 0; j < samplesPerSpectrum; j++)
-                                spectrumValueSum += spectrum[j + (i * samplesPerSpectrum)];
-                            if(spectrumList[i] == null)
-                                spectrumList[i] = new ArrayList<Float>();
-                            spectrumList[i].add(spectrumValueSum);
-                        }
-                    }
-                    wavTarget.delete();
-                    //toConvert.delete();
-                    this.spectrumListStatus = FINISH_STATUS;
-                } catch (Exception e){
-                    spectrumList = null;
-                    this.spectrumListStatus = ERROR_STATUS;
-                }
-
-                this.importingPercentage += 25;
-
-                latch.countDown();
-            });
-            */
             executor.execute(() -> {
                 try {
                     latch.await();
@@ -233,15 +146,13 @@ public class MusicConverter {
 
                 ImportedFileHandler.importNewFile(this);
 
-                //this.importStatus = FINISH_STATUS;
-                this.importingPercentage += 64;
+                this.importingPercentage += 67;
             });
 
             executor.shutdown();
         } catch (Exception ex) {                                      
             ex.printStackTrace();                                       
-            oggTarget = null;   
-            //wavTarget = null;
+            oggTarget = null;
         }
     }
 
@@ -283,6 +194,40 @@ public class MusicConverter {
         hasBeatTrace = false;
     }
 
+    public void clearBeatTrace(int index){
+        for (int i = 0; i < beatTrace.length; i++) {
+            int beatTraceInstant = beatTrace[i];
+            int value = 3;
+            value = value << (2*index);
+            value = value ^ 255;
+            value = beatTraceInstant & value;
+            beatTrace[i] = value;
+        }
+    }
+
+    public void deleteBeatTrace(int index){
+        if(index < numberOfBeatTraces && index > 0){
+            this.numberOfBeatTraces = numberOfBeatTraces - 1;
+            for (int i = 0; i < beatTrace.length; i++) {
+                int suffixPosition = 255 >> 8 - (2 * index);
+                int suffix = beatTrace[i] & suffixPosition;
+                int prefixPosition = 255 << 2 * (index + 1);
+                int prefix = (beatTrace[i] & prefixPosition) >> 2;
+                beatTrace[i] = prefix | suffix;
+            }
+            List<Color> newBeatTraceColor = new ArrayList<>();
+            List<String> newBeatTraceNames = new ArrayList<>();
+            for (int i = 0; i < beatTraceColor.length; i++) {
+                if(i != index) {
+                    newBeatTraceColor.add(beatTraceColor[i]);
+                    newBeatTraceNames.add(beatTraceNames[i]);
+                }
+            }
+            this.beatTraceColor = newBeatTraceColor.toArray(new Color[0]);
+            this.beatTraceNames = newBeatTraceNames.toArray(new String[0]);
+        }
+    }
+
     public String getStringedDuration() {
         return stringedDuration;
     }
@@ -302,19 +247,11 @@ public class MusicConverter {
     public FileHandle getOggTarget() {
         return new FileHandle(oggTarget);
     }
-/*
-    public FileHandle getWavTarget() {
-        return new FileHandle(wavTarget);
-    }
-*/
+
     public Long getDuration() {
         return duration;
     }
-/*
-    public List[] getSpectrumList() {
-        return spectrumList;
-    }
-*/
+
     public String getFileName() {
         return fileName;
     }
@@ -333,6 +270,22 @@ public class MusicConverter {
 
     public int getNumberOfBeatTraces() {
         return numberOfBeatTraces;
+    }
+
+    public Color[] getBeatTraceColor() {
+        return beatTraceColor;
+    }
+
+    public String[] getBeatTraceNames() {
+        return beatTraceNames;
+    }
+
+    public void setBeatTraceColor(Color beatTraceColor, int i) {
+        this.beatTraceColor[i] = beatTraceColor;
+    }
+
+    public void setBeatTraceNames(String beatTraceNames, int i) {
+        this.beatTraceNames[i] = beatTraceNames;
     }
 }
 
