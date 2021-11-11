@@ -43,6 +43,7 @@ public class MusicPlayerScreen implements Screen {
     VisImage recButton;
     VisImage backToMenu;
     VisImage clearButton;
+    VisImage addRollButton;
     BeatSlider musicSlider;
     VisLabel fileLabel;
     VisLabel editInfo;
@@ -57,6 +58,7 @@ public class MusicPlayerScreen implements Screen {
     Texture playButtonTexture;
     Texture pauseButtonTexture;
     Texture clearButtonTexture;
+    Texture addButtonTexture;
     Texture recTexture;
     Texture stopTexture;
     Texture backToMenuTexture;
@@ -83,6 +85,7 @@ public class MusicPlayerScreen implements Screen {
         playButtonTexture = new Texture("play_button.png");
         pauseButtonTexture = new Texture("pause_button.png");
         clearButtonTexture = new Texture("trash_close.png");
+        addButtonTexture = new Texture("add.png");
         backToMenuTexture = new Texture("back_button.png");
         background = new Texture("background.png");
         recTexture = new Texture("rec_button.png");
@@ -194,6 +197,21 @@ public class MusicPlayerScreen implements Screen {
         });
         stage.addActor(clearButton);
 
+        // add roll button
+        addRollButton = new VisImage(addButtonTexture);
+        addRollButton.setSize(30, 30);
+        addRollButton.setPosition(clearButton.getX() - addRollButton.getWidth() - 20, clearButton.getY() + (clearButton.getHeight() - addRollButton.getHeight()) / 2);
+        addRollButton.addListener(new ClickListener() {
+            public void clicked(InputEvent event, float x, float y) {
+                if(music.addBeatTrace()){
+                    musicSlider.resetRolls();
+                    resetBeatCircles();
+                    setStageActorsForEdit();
+                }
+            }
+        });
+        stage.addActor(addRollButton);
+
         // back button
         backToMenu = new VisImage(backToMenuTexture);
         backToMenu.setSize(50, 50);
@@ -270,6 +288,7 @@ public class MusicPlayerScreen implements Screen {
          */
 
         clearButton.setVisible(false);
+        addRollButton.setVisible(false);
     }
 
     private void setStageActorsForEdit(){
@@ -296,6 +315,7 @@ public class MusicPlayerScreen implements Screen {
          */
 
         clearButton.setVisible(true);
+        addRollButton.setVisible(true);
     }
 
     @Override
@@ -344,6 +364,15 @@ public class MusicPlayerScreen implements Screen {
                 }
             }
              */
+        }
+
+        // check beat circle size
+        if(beatCircles.length / 2 != music.getNumberOfBeatTraces()){
+            resetBeatCircles();
+            if(isRec)
+                setStageActorsForEdit();
+            else
+                setStageActorsForPlay();
         }
 
         // pause with space key

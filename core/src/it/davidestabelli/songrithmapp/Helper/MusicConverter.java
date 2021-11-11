@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -205,8 +206,8 @@ public class MusicConverter {
         }
     }
 
-    public void deleteBeatTrace(int index){
-        if(index < numberOfBeatTraces && index > 0){
+    public boolean deleteBeatTrace(int index){
+        if(index < numberOfBeatTraces && numberOfBeatTraces > 0){
             this.numberOfBeatTraces = numberOfBeatTraces - 1;
             for (int i = 0; i < beatTrace.length; i++) {
                 int suffixPosition = 255 >> 8 - (2 * index);
@@ -225,7 +226,26 @@ public class MusicConverter {
             }
             this.beatTraceColor = newBeatTraceColor.toArray(new Color[0]);
             this.beatTraceNames = newBeatTraceNames.toArray(new String[0]);
-        }
+
+            return true;
+        } else
+            return false;
+    }
+
+    public boolean addBeatTrace(){
+        if(numberOfBeatTraces < 4){
+            this.numberOfBeatTraces = numberOfBeatTraces + 1;
+
+            List<Color> newBeatTraceColor = new ArrayList<>(Arrays.asList(this.beatTraceColor));
+            List<String> newBeatTraceNames = new ArrayList<>(Arrays.asList(this.beatTraceNames));
+            newBeatTraceColor.add(Color.WHITE);
+            newBeatTraceNames.add("");
+            this.beatTraceColor = newBeatTraceColor.toArray(new Color[0]);
+            this.beatTraceNames = newBeatTraceNames.toArray(new String[0]);
+
+            return true;
+        } else
+            return false;
     }
 
     public String getStringedDuration() {

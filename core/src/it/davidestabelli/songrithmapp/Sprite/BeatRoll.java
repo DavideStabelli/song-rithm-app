@@ -32,6 +32,7 @@ public class BeatRoll extends Group {
     private float maxValue;
     private float minValue;
     private ClickListener callableTagClickEvent;
+    private BeatSlider parentSlider;
 
     private Group menuBar;
     private VisTextField barName;
@@ -53,6 +54,7 @@ public class BeatRoll extends Group {
         this.maxValue = maxValue;
         this.minValue = minValue;
         this.callableTagClickEvent = null;
+        this.parentSlider = parentSlider;
 
         this.menuBar = new Group();
         menuBar.setPosition(0, BeatRollTile.DEFAULT_TAG_HEIGHT);
@@ -88,8 +90,8 @@ public class BeatRoll extends Group {
         deleteButton.setPosition(barName.getX() + barName.getWidth() + MENU_BAR_HEIGHT, 0);
         deleteButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                parentSlider.getMusic().deleteBeatTrace(beatTraceIndex);
-                parentSlider.resetRolls();
+                if(parentSlider.getMusic().deleteBeatTrace(beatTraceIndex))
+                    parentSlider.resetRolls();
             }
         });
         menuBar.addActor(deleteButton);
@@ -197,5 +199,7 @@ public class BeatRoll extends Group {
             changeColorButton.setVisible(true);
             deleteButton.setVisible(true);
         }
+        if(parentSlider.getBeatRollsLenght() <=  1)
+            deleteButton.setVisible(false);
     }
 }

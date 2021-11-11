@@ -86,6 +86,8 @@ public class ImportedFileHandler {
             if(music.hasBeatTrace())
                 readedMap.put("beatTrace", music.getBeatTrace());
 
+            readedMap.put("numberOfTraces", music.getNumberOfBeatTraces());
+
             String[] colorCodes = new String[music.getNumberOfBeatTraces()];
             for (int i = 0; i < music.getNumberOfBeatTraces(); i++) {
                 colorCodes[i] = music.getBeatTraceColor()[i].toString();

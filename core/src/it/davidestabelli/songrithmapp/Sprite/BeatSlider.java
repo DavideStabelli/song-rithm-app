@@ -1,6 +1,7 @@
 package it.davidestabelli.songrithmapp.Sprite;
 
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -10,6 +11,7 @@ import it.davidestabelli.songrithmapp.Helper.MusicConverter;
 
 public class BeatSlider extends VisSlider {
     private BeatRoll[] beatRolls;
+    private Group beatRollsGroup;
     private VisRadioButton[] barSelector;
 
     private MusicConverter music;
@@ -26,13 +28,17 @@ public class BeatSlider extends VisSlider {
 
         this.editMode = false;
         this.stage = stage;
+        this.beatRollsGroup = new Group();
 
         resetRolls();
 
+        stage.addActor(beatRollsGroup);
         stage.addActor(this);
     }
 
     public void resetRolls(){
+        beatRollsGroup.clearChildren();
+
         int beatNumber = music.getNumberOfBeatTraces();
         this.beatRolls = new BeatRoll[beatNumber];
         this.barSelector = new VisRadioButton[beatNumber];
@@ -62,7 +68,7 @@ public class BeatSlider extends VisSlider {
                 }
             });
 
-            stage.addActor(beatRolls[i]);
+            beatRollsGroup.addActor(beatRolls[i]);
         }
 
         barSelector[0].setChecked(true);
@@ -71,8 +77,9 @@ public class BeatSlider extends VisSlider {
     @Override
     public void setPosition(float x, float y) {
         super.setPosition(x, y);
+        beatRollsGroup.setPosition(0, getY() + getHeight() + 20);
         for (int i = 0; i < beatRolls.length; i++)
-            beatRolls[i].setPosition(0, getY() + getHeight() + 20 + (20 + BeatRollTile.DEFAULT_TAG_HEIGHT + BeatRoll.MENU_BAR_HEIGHT) * i);
+            beatRolls[i].setPosition(0, (20 + BeatRollTile.DEFAULT_TAG_HEIGHT + BeatRoll.MENU_BAR_HEIGHT) * i);
     }
 
     public void updateTags(){
@@ -97,6 +104,10 @@ public class BeatSlider extends VisSlider {
                 return i;
         }
         return 0;
+    }
+
+    public int getBeatRollsLenght(){
+        return beatRolls.length;
     }
 
     public void setEditMode(boolean editMode){
