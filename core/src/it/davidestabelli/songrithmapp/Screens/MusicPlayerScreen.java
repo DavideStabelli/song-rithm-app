@@ -23,6 +23,7 @@ import com.kotcrab.vis.ui.widget.VisImage;
 import com.kotcrab.vis.ui.widget.VisLabel;
 import com.kotcrab.vis.ui.widget.VisSlider;
 
+import it.davidestabelli.songrithmapp.Helper.Configurations;
 import it.davidestabelli.songrithmapp.Helper.ImportedFileHandler;
 import it.davidestabelli.songrithmapp.MainGame;
 import it.davidestabelli.songrithmapp.Helper.MusicConverter;
@@ -34,6 +35,7 @@ import it.davidestabelli.songrithmapp.Sprite.BeatSlider;
 public class MusicPlayerScreen implements Screen {
     public static final short RIGHT_BEAT = 1;
     public static final short LEFT_BEAT = 2;
+    public static final float BEAT_CIRCLE_DISTANCE = 200;
 
     public MainGame game;
 
@@ -47,6 +49,7 @@ public class MusicPlayerScreen implements Screen {
     BeatSlider musicSlider;
     VisLabel fileLabel;
     VisLabel editInfo;
+    VisLabel[] beatCircleLabels;
 
     //List<BeatBar> beatBars;
     //float barRefreshTime;
@@ -120,7 +123,6 @@ public class MusicPlayerScreen implements Screen {
         musicSlider.addListener(new ClickListener() {
             @Override
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
-                //musicFile.setPosition(musicSlider.getValue());
                 super.touchDragged(event, x, y, pointer);
             }
 
@@ -243,6 +245,12 @@ public class MusicPlayerScreen implements Screen {
         barRefreshTime = 0;
          */
 
+        beatCircleLabels = new VisLabel[4];
+        for (int i = 0; i < beatCircleLabels.length; i++) {
+            beatCircleLabels[i] = new VisLabel("");
+            stage.addActor(beatCircleLabels[i]);
+        }
+
         // beat circles
         resetBeatCircles();
 
@@ -256,7 +264,7 @@ public class MusicPlayerScreen implements Screen {
             boolean isLeft = i%2 == 0;
             float xPosition;
             if(isLeft){
-                xPosition = ((Gdx.graphics.getWidth() * ((i/2) + 1) /(music.getNumberOfBeatTraces() + 1)) - diameter / 2);
+                xPosition = (((Gdx.graphics.getWidth() + BEAT_CIRCLE_DISTANCE) * ((i/2) + 1) /(music.getNumberOfBeatTraces() + 1)) - diameter / 2) - (BEAT_CIRCLE_DISTANCE/2);
             } else {
                 xPosition = beatCircles[i - 1].getPosition().x + diameter;
             }
@@ -289,6 +297,21 @@ public class MusicPlayerScreen implements Screen {
 
         clearButton.setVisible(false);
         addRollButton.setVisible(false);
+
+        for (int i = 0; i < beatCircleLabels.length; i++) {
+            if(i < music.getNumberOfBeatTraces()){
+                beatCircleLabels[i].setText(music.getBeatTraceNames()[i]);
+                float circleYPosition = beatCircles[i*2].getPosition().y - beatCircles[i*2].getRadius() / 2;
+                beatCircleLabels[i].setPosition(
+                        beatCircles[i*2].getPosition().x,
+                        circleYPosition - (circleYPosition - (playPauseButton.getY() + playPauseButton.getHeight()) ) / 2
+                        );
+                beatCircleLabels[i].setVisible(true);
+                beatCircleLabels[i].setColor(music.getBeatTraceColor()[i]);
+            } else {
+                beatCircleLabels[i].setVisible(false);
+            }
+        }
     }
 
     private void setStageActorsForEdit(){
@@ -316,6 +339,9 @@ public class MusicPlayerScreen implements Screen {
 
         clearButton.setVisible(true);
         addRollButton.setVisible(true);
+
+        for (int i = 0; i < beatCircleLabels.length; i++)
+            beatCircleLabels[i].setVisible(false);
     }
 
     @Override
@@ -390,32 +416,11 @@ public class MusicPlayerScreen implements Screen {
             }
         }
 
-        long millisPosition = Math.round(musicFile.getPosition() * 1000);
         int beatTrace = music.getBeatTrace(musicSlider.getValue());
 
         // rec update
         if(isRec){
-
-            if(Gdx.input.isKeyJustPressed(game.configs.editLeftBeatKey)){
-                music.setBeatTrace(millisPosition, LEFT_BEAT << (2*musicSlider.getSelectedBeatIndex()), true);
-                musicSlider.updateTags();
-            }
-            if(Gdx.input.isKeyJustPressed(game.configs.editRightBeatKey)){
-                music.setBeatTrace(millisPosition, RIGHT_BEAT  << (2*musicSlider.getSelectedBeatIndex()), true);
-                musicSlider.updateTags();
-            }
-            if(Gdx.input.isKeyJustPressed(game.configs.deleteBeatKey)){
-                int value = LEFT_BEAT + RIGHT_BEAT;
-                value = value << (2*musicSlider.getSelectedBeatIndex());
-                value = value ^ 255;
-                value = beatTrace & value;
-                music.setBeatTrace(millisPosition, value, false);
-                musicSlider.updateTags();
-            }
-        }
-
-        // slider zoom update
-        if(isRec){
+            musicSlider.handleInput(game.configs);
             musicSlider.update(music);
         }
 

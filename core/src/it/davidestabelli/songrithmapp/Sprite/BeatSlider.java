@@ -1,18 +1,28 @@
 package it.davidestabelli.songrithmapp.Sprite;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.kotcrab.vis.ui.widget.VisLabel;
 import com.kotcrab.vis.ui.widget.VisRadioButton;
 import com.kotcrab.vis.ui.widget.VisSlider;
+import it.davidestabelli.songrithmapp.Helper.Configurations;
 import it.davidestabelli.songrithmapp.Helper.MusicConverter;
+
+import java.time.LocalTime;
+
+import static it.davidestabelli.songrithmapp.Screens.MusicPlayerScreen.LEFT_BEAT;
+import static it.davidestabelli.songrithmapp.Screens.MusicPlayerScreen.RIGHT_BEAT;
 
 public class BeatSlider extends VisSlider {
     private BeatRoll[] beatRolls;
     private Group beatRollsGroup;
     private VisRadioButton[] barSelector;
+    private VisLabel sliderTimeInfo;
 
     private MusicConverter music;
     private Music musicFile;
@@ -29,6 +39,37 @@ public class BeatSlider extends VisSlider {
         this.editMode = false;
         this.stage = stage;
         this.beatRollsGroup = new Group();
+        this.sliderTimeInfo = new VisLabel("");
+        sliderTimeInfo.setVisible(false);
+        stage.addActor(sliderTimeInfo);
+        addListener(new ClickListener(){
+            @Override
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
+                String stringPosition = LocalTime.ofSecondOfDay(Math.round(getValue() / 1000)).format(MusicConverter.AUDIO_FORMAT);
+                sliderTimeInfo.setText(stringPosition);
+                GlyphLayout layoutLabel = sliderTimeInfo.getGlyphLayout();
+                float sliderX = (getValue() * getWidth() / (getMaxValue() - getMinValue())) + getX() - layoutLabel.width / 2;
+                sliderTimeInfo.setPosition(sliderX,getY() + getHeight() + layoutLabel.height);
+                super.touchDragged(event, x, y, pointer);
+            }
+
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                float sliderX = (getValue() * getWidth() / (getMaxValue() - getMinValue())) + getX();
+                sliderTimeInfo.setPosition(sliderX,getY() + getHeight() + 15);
+                String stringPosition = LocalTime.ofSecondOfDay(Math.round(getValue() / 1000)).format(MusicConverter.AUDIO_FORMAT);
+                sliderTimeInfo.setText(stringPosition);
+                sliderTimeInfo.setVisible(true);
+                return super.touchDown(event, x, y, pointer, button);
+            }
+
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                sliderTimeInfo.setVisible(false);
+                super.touchUp(event, x, y, pointer, button);
+            }
+
+        });
 
         resetRolls();
 
@@ -74,6 +115,27 @@ public class BeatSlider extends VisSlider {
         barSelector[0].setChecked(true);
     }
 
+    public void handleInput(Configurations configs){
+        long millisPosition = Math.round(musicFile.getPosition() * 1000);
+        int beatTrace = music.getBeatTrace(getValue());
+        if(Gdx.input.isKeyJustPressed(configs.editLeftBeatKey)){
+            music.setBeatTrace(millisPosition, LEFT_BEAT << (2*getSelectedBeatIndex()), true);
+            updateTags();
+        }
+        if(Gdx.input.isKeyJustPressed(configs.editRightBeatKey)){
+            music.setBeatTrace(millisPosition, RIGHT_BEAT  << (2*getSelectedBeatIndex()), true);
+            updateTags();
+        }
+        if(Gdx.input.isKeyJustPressed(configs.deleteBeatKey)){
+            int value = LEFT_BEAT + RIGHT_BEAT;
+            value = value << (2*getSelectedBeatIndex());
+            value = value ^ 255;
+            value = beatTrace & value;
+            music.setBeatTrace(millisPosition, value, false);
+            updateTags();
+        }
+    }
+
     @Override
     public void setPosition(float x, float y) {
         super.setPosition(x, y);
@@ -87,7 +149,7 @@ public class BeatSlider extends VisSlider {
             BeatRoll beatRoll = beatRolls[i];
             beatRoll.clearChildren();
             if (editMode)
-                beatRoll.updateTags(music, musicFile);
+                beatRoll.updateTags(music);
         }
     }
 

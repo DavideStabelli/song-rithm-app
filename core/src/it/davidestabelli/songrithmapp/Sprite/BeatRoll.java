@@ -138,7 +138,7 @@ public class BeatRoll extends Group {
         this.callableTagClickEvent = callable;
     }
 
-    public void updateTags(final MusicConverter music, final Music musicFile){
+    public void updateTags(MusicConverter music){
         tagCursor.setSize(tagCursorTexture.getWidth(), BeatRollTile.DEFAULT_TAG_HEIGHT);
         tagSelection.setSize(BeatRollTile.DEFAULT_TAG_WIDTH, BeatRollTile.DEFAULT_TAG_HEIGHT);
         tagCursor.setPosition(0, 0);

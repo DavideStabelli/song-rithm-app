@@ -106,6 +106,10 @@ public class BeatCircle{
         this.active = active;
     }
 
+    public float getRadius() {
+        return radius;
+    }
+
     public Vector2 getPosition() {
         return position;
     }

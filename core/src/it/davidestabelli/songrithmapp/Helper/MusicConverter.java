@@ -90,7 +90,7 @@ public class MusicConverter {
         oggTarget = null;
 
         this.importingPercentage = 0;
-        this.numberOfBeatTraces = 4;
+        this.numberOfBeatTraces = 1;
 
         this.beatTraceColor = new Color[numberOfBeatTraces];
         this.beatTraceNames = new String[numberOfBeatTraces];
