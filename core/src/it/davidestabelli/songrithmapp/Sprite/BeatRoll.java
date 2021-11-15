@@ -201,5 +201,13 @@ public class BeatRoll extends Group {
         }
         if(parentSlider.getBeatRollsLenght() <=  1)
             deleteButton.setVisible(false);
+
+        if(Gdx.input.justTouched() && !barName.isTouchFocusTarget()){
+            barName.focusGained();
+        }
+    }
+
+    public boolean isNameFieldFocused(){
+        return barName.hasKeyboardFocus();
     }
 }

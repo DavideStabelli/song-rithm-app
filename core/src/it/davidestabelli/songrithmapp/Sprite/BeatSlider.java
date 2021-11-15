@@ -116,23 +116,25 @@ public class BeatSlider extends VisSlider {
     }
 
     public void handleInput(Configurations configs){
-        long millisPosition = Math.round(musicFile.getPosition() * 1000);
-        int beatTrace = music.getBeatTrace(getValue());
-        if(Gdx.input.isKeyJustPressed(configs.editLeftBeatKey)){
-            music.setBeatTrace(millisPosition, LEFT_BEAT << (2*getSelectedBeatIndex()), true);
-            updateTags();
-        }
-        if(Gdx.input.isKeyJustPressed(configs.editRightBeatKey)){
-            music.setBeatTrace(millisPosition, RIGHT_BEAT  << (2*getSelectedBeatIndex()), true);
-            updateTags();
-        }
-        if(Gdx.input.isKeyJustPressed(configs.deleteBeatKey)){
-            int value = LEFT_BEAT + RIGHT_BEAT;
-            value = value << (2*getSelectedBeatIndex());
-            value = value ^ 255;
-            value = beatTrace & value;
-            music.setBeatTrace(millisPosition, value, false);
-            updateTags();
+        if(!isTextBoxSelected()) {
+            long millisPosition = Math.round(musicFile.getPosition() * 1000);
+            int beatTrace = music.getBeatTrace(getValue());
+            if (Gdx.input.isKeyJustPressed(configs.editLeftBeatKey)) {
+                music.setBeatTrace(millisPosition, LEFT_BEAT << (2 * getSelectedBeatIndex()), true);
+                updateTags();
+            }
+            if (Gdx.input.isKeyJustPressed(configs.editRightBeatKey)) {
+                music.setBeatTrace(millisPosition, RIGHT_BEAT << (2 * getSelectedBeatIndex()), true);
+                updateTags();
+            }
+            if (Gdx.input.isKeyJustPressed(configs.deleteBeatKey)) {
+                int value = LEFT_BEAT + RIGHT_BEAT;
+                value = value << (2 * getSelectedBeatIndex());
+                value = value ^ 255;
+                value = beatTrace & value;
+                music.setBeatTrace(millisPosition, value, false);
+                updateTags();
+            }
         }
     }
 
@@ -166,6 +168,11 @@ public class BeatSlider extends VisSlider {
                 return i;
         }
         return 0;
+    }
+
+    public boolean isTextBoxSelected(){
+        BeatRoll selectedRoll = beatRolls[getSelectedBeatIndex()];
+        return selectedRoll.isNameFieldFocused();
     }
 
     public int getBeatRollsLenght(){

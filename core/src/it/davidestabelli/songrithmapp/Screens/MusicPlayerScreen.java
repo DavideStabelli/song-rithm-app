@@ -13,6 +13,7 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -41,31 +42,32 @@ public class MusicPlayerScreen implements Screen {
 
     private Stage stage;
 
-    VisImage playPauseButton;
-    VisImage recButton;
-    VisImage backToMenu;
-    VisImage clearButton;
-    VisImage addRollButton;
-    BeatSlider musicSlider;
-    VisLabel fileLabel;
-    VisLabel editInfo;
-    VisLabel[] beatCircleLabels;
+    private VisImage playPauseButton;
+    private VisImage recButton;
+    private VisImage backToMenu;
+    private VisImage clearButton;
+    private VisImage addRollButton;
+    private BeatSlider musicSlider;
+    private VisLabel fileLabel;
+    private VisLabel editInfo;
+    private VisLabel[] beatCircleLabels;
+    private ShapeRenderer separatorRenderer;
 
     //List<BeatBar> beatBars;
     //float barRefreshTime;
 
-    MusicConverter music;
-    Music musicFile;
-    boolean isRec;
+    private MusicConverter music;
+    private Music musicFile;
+    private boolean isRec;
 
-    Texture playButtonTexture;
-    Texture pauseButtonTexture;
-    Texture clearButtonTexture;
-    Texture addButtonTexture;
-    Texture recTexture;
-    Texture stopTexture;
-    Texture backToMenuTexture;
-    Texture background;
+    private Texture playButtonTexture;
+    private Texture pauseButtonTexture;
+    private Texture clearButtonTexture;
+    private Texture addButtonTexture;
+    private Texture recTexture;
+    private Texture stopTexture;
+    private Texture backToMenuTexture;
+    private Texture background;
 
     /*private BeatCircle leftBeatCircle;
     private BeatCircle rightBeatCircle;*/
@@ -251,6 +253,10 @@ public class MusicPlayerScreen implements Screen {
             stage.addActor(beatCircleLabels[i]);
         }
 
+        // separator renderer
+        this.separatorRenderer = new ShapeRenderer();
+        this.separatorRenderer.setColor(Color.WHITE);
+
         // beat circles
         resetBeatCircles();
 
@@ -402,7 +408,7 @@ public class MusicPlayerScreen implements Screen {
         }
 
         // pause with space key
-        if(Gdx.input.isKeyJustPressed(game.configs.pauseMusicKey)){
+        if(Gdx.input.isKeyJustPressed(game.configs.pauseMusicKey) && !musicSlider.isTextBoxSelected()){
             if (musicFile.isPlaying()) {
                 musicFile.pause();
                 for(BeatCircle beatCircle : beatCircles)
@@ -462,6 +468,18 @@ public class MusicPlayerScreen implements Screen {
             beatCircle.draw(game.batch);
 
         game.batch.end();
+
+        if(!isRec) {
+            separatorRenderer.begin(ShapeRenderer.ShapeType.Line);
+            for (int i = 0; i < beatCircles.length; i++) {
+                if (i % 2 == 0 && i > 0) {
+                    float separatorX = (beatCircles[i].getPosition().x + beatCircles[i - 1].getPosition().x) / 2;
+                    separatorRenderer.line(separatorX, playPauseButton.getY() + playPauseButton.getHeight(), separatorX, backToMenu.getY());
+                }
+            }
+            separatorRenderer.end();
+        }
+
         stage.act();
         stage.draw();
     }
