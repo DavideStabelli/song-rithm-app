@@ -1,7 +1,6 @@
 package it.davidestabelli.songrithmapp.Sprite;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -153,14 +152,11 @@ public class BeatRoll extends Group {
         addActor(menuBar);
     }
 
-    public void update(MusicConverter music, float sliderValue){
-
-        long sliderValueMillis = Math.round(sliderValue);
-
-        float cursorX = (sliderValueMillis / (maxValue - minValue)) * (BeatRollTile.DEFAULT_TAG_WIDTH * music.getBeatTrace().length);
+    public void update(MusicConverter music, double sliderValueSeconds){
+        float cursorX = (Double.valueOf(sliderValueSeconds).floatValue() / (maxValue - minValue)) * (BeatRollTile.DEFAULT_TAG_WIDTH * music.getBeatTrace().length);
         tagCursor.setPosition(cursorX, 0);
 
-        long index = music.getBeatTraceIndexFromMillis(sliderValueMillis);
+        long index = music.getBeatTraceIndexFromSeconds(sliderValueSeconds);
         tagSelection.setPosition(index * BeatRollTile.DEFAULT_TAG_WIDTH, 0);
 
         boolean isCursorOverHalfScreen = tagCursor.getX() + getX() >= (Gdx.graphics.getWidth() / 6) * 5;
@@ -205,6 +201,12 @@ public class BeatRoll extends Group {
         if(Gdx.input.justTouched() && !barName.isTouchFocusTarget()){
             barName.focusGained();
         }
+    }
+
+    @Override
+    public void setX(float x) {
+        super.setX(x);
+        menuBar.setX(-x);
     }
 
     public boolean isNameFieldFocused(){

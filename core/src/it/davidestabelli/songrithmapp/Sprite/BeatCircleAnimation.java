@@ -81,7 +81,7 @@ public class BeatCircleAnimation {
     }
 
     public static float animationDuration(float finalRadius){
-        return (Math.abs((finalRadius / START_ANIMATION_CIRCLE_DIAMETER_FRACTION) - finalRadius) / Math.abs(ANIMATION_DIAMETER_DELTA)) * 1000;
+        return (Math.abs((finalRadius / START_ANIMATION_CIRCLE_DIAMETER_FRACTION) - finalRadius) / Math.abs(ANIMATION_DIAMETER_DELTA));
     }
 
     public void setColor(Color color){

@@ -29,14 +29,14 @@ import ws.schild.jave.encode.EncodingAttributes;
 
 @SuppressWarnings("NewApi")
 public class MusicConverter {
-    private static final float BEAT_TRACE_SAMPLE = 0.11f;
+    private static final float BEAT_TRACE_SAMPLE = 0.1f;
     public static final DateTimeFormatter AUDIO_FORMAT = DateTimeFormatter.ofPattern("mm:ss");
 
     private File source;		                 
-    private File oggTarget;
+    private File wavTarget;
     private int importingPercentage;
 
-    private Long duration; // millis
+    private Long duration;
 
     private String stringedDuration;
     private float secondsDuration;
@@ -52,13 +52,13 @@ public class MusicConverter {
     private Color[] beatTraceColor;
     private String[] beatTraceNames;
 
-    public MusicConverter(String oggPath, int[] beatTrace, String name, int numberOfBeatTraces, Color[] beatTraceColor, String[] beatTraceNames) throws EncoderException {
-        this.oggTarget = new File(oggPath);
+    public MusicConverter(String wavPath, int[] beatTrace, String name, int numberOfBeatTraces, Color[] beatTraceColor, String[] beatTraceNames) throws EncoderException {
+        this.wavTarget = new File(wavPath);
 
         //Getting infos
-        MultimediaObject sourceObject = new MultimediaObject(oggTarget);
+        MultimediaObject sourceObject = new MultimediaObject(wavTarget);
         this.duration = sourceObject.getInfo().getDuration();
-        this.secondsDuration = duration / 1000;
+        this.secondsDuration = BigDecimalRounder.roundFloat(duration / 1000f, 2);
         this.stringedDuration = LocalTime.ofSecondOfDay(Math.round(secondsDuration)).format(AUDIO_FORMAT);
 
         this.sourceFormat = sourceObject.getInfo().getFormat();
@@ -66,7 +66,7 @@ public class MusicConverter {
 
         //Set Beat Trace
         if(beatTrace == null) {
-            int beatsIntoTrace = Math.round((duration / 1000) / BEAT_TRACE_SAMPLE);
+            int beatsIntoTrace = Math.round(secondsDuration / BEAT_TRACE_SAMPLE);
             this.beatTrace = new int[beatsIntoTrace];
             for (int i = 0; i < beatsIntoTrace; i++)
                 this.beatTrace[i] = 0;
@@ -76,8 +76,8 @@ public class MusicConverter {
             this.hasBeatTrace = true;
         }
         this.numberOfBeatTraces = numberOfBeatTraces;
-        this.beatTraceDurationRatio = this.beatTrace.length / duration.doubleValue();
-        this.durationBeatTraceRatio = duration.doubleValue() / this.beatTrace.length;
+        this.beatTraceDurationRatio =  BigDecimalRounder.roundFloat(this.beatTrace.length / secondsDuration, 2);
+        this.durationBeatTraceRatio =  BigDecimalRounder.roundFloat(secondsDuration / this.beatTrace.length, 2);
 
         this.importingPercentage = 100;
 
@@ -87,7 +87,7 @@ public class MusicConverter {
 
     public MusicConverter(File toConvert) {
         this.source = toConvert;
-        oggTarget = null;
+        wavTarget = null;
 
         this.importingPercentage = 0;
         this.numberOfBeatTraces = 1;
@@ -110,29 +110,29 @@ public class MusicConverter {
             ExecutorService executor = Executors.newFixedThreadPool(2);
 
             executor.execute(() -> {
-                if(!sourceFormat.equals("ogg")){
+                if(!sourceFormat.equals("wav")){
                     try {
                         //Audio Attributes
                         AudioAttributes audio = new AudioAttributes();
-                        audio.setCodec("libvorbis");
+                        audio.setCodec("pcm_s16le");
                         audio.setChannels(2);
-                        float samplingRate = (40960 / (BEAT_TRACE_SAMPLE * 2 * 2)) * 2;
+                        float samplingRate = 44100;
                         audio.setSamplingRate(Math.round(samplingRate));
 
                         //Encoding attributes
                         EncodingAttributes attrs = new EncodingAttributes();
-                        attrs.setOutputFormat("ogg");
+                        attrs.setOutputFormat("wav");
                         attrs.setAudioAttributes(audio);
 
                         //Encoder
-                        oggTarget = Files.createTempFile(source.getName().split("\\.")[0], ".ogg").toFile();
+                        wavTarget = Files.createTempFile(source.getName().split("\\.")[0], ".wav").toFile();
                         Encoder encoder = new Encoder();
-                        encoder.encode(new MultimediaObject(source), oggTarget, attrs);
+                        encoder.encode(new MultimediaObject(source), wavTarget, attrs);
                     } catch (Exception e){
-                        oggTarget = null;
+                        wavTarget = null;
                     }
                 } else {
-                    oggTarget = source;
+                    wavTarget = source;
                 }
                 this.importingPercentage += 33;
                 latch.countDown();
@@ -152,14 +152,14 @@ public class MusicConverter {
 
             executor.shutdown();
         } catch (Exception ex) {                                      
-            ex.printStackTrace();                                       
-            oggTarget = null;
+            ex.printStackTrace();
+            wavTarget = null;
         }
     }
 
-    public long getBeatTraceIndexFromMillis(float millisPosition){
+    public long getBeatTraceIndexFromSeconds(double secondsPosition){
         long index = 0;
-        double doubleIndex = millisPosition * beatTraceDurationRatio;
+        double doubleIndex = secondsPosition * beatTraceDurationRatio;
         doubleIndex = Math.floor(doubleIndex);
         index = Math.round(doubleIndex);
         if(index >= beatTrace.length)
@@ -167,14 +167,14 @@ public class MusicConverter {
         return index;
     }
 
-    public long getMillisFromBeatTraceIndex(int index){
-        double rawMillis = (index * durationBeatTraceRatio) + BEAT_TRACE_SAMPLE*500;
+    public double getSecondsFromBeatTraceIndex(int index){
+        double rawSeconds = (index * durationBeatTraceRatio) + BEAT_TRACE_SAMPLE / 2;
 
-        return Math.round(rawMillis);
+        return rawSeconds;
     }
 
-    public void setBeatTrace(float millisPosition, int value, boolean add){
-        Long index = getBeatTraceIndexFromMillis(millisPosition);
+    public void setBeatTrace(double secondsPosition, int value, boolean add){
+        Long index = getBeatTraceIndexFromSeconds(secondsPosition);
         if(!hasBeatTrace)
             hasBeatTrace = true;
         if(value == 0)
@@ -183,8 +183,8 @@ public class MusicConverter {
             beatTrace[index.intValue()] = add ? (value | beatTrace[index.intValue()]) : value;
     }
 
-    public int getBeatTrace(float millisPosition){
-        Long index = getBeatTraceIndexFromMillis(millisPosition);
+    public int getBeatTrace(double secondsPosition){
+        Long index = getBeatTraceIndexFromSeconds(secondsPosition);
         return beatTrace[index.intValue()];
     }
 
@@ -252,7 +252,7 @@ public class MusicConverter {
         return stringedDuration;
     }
 
-    public float getSecondsDuration() {
+    public double getSecondsDuration() {
         return secondsDuration;
     }
 
@@ -264,8 +264,8 @@ public class MusicConverter {
         return beatTrace;
     }
 
-    public FileHandle getOggTarget() {
-        return new FileHandle(oggTarget);
+    public FileHandle getWavTarget() {
+        return new FileHandle(wavTarget);
     }
 
     public Long getDuration() {

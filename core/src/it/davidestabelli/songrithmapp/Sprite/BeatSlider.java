@@ -12,6 +12,7 @@ import com.kotcrab.vis.ui.widget.VisRadioButton;
 import com.kotcrab.vis.ui.widget.VisSlider;
 import it.davidestabelli.songrithmapp.Helper.Configurations;
 import it.davidestabelli.songrithmapp.Helper.MusicConverter;
+import it.davidestabelli.songrithmapp.Helper.SimpleAudioPlayer;
 
 import java.time.LocalTime;
 
@@ -25,16 +26,17 @@ public class BeatSlider extends VisSlider {
     private VisLabel sliderTimeInfo;
 
     private MusicConverter music;
-    private Music musicFile;
+    //private Music musicFile;
+    private SimpleAudioPlayer musicPlayer;
 
     private boolean editMode;
     private Stage stage;
 
-    public BeatSlider(float min, float max, float stepSize, boolean vertical, Stage stage, MusicConverter music, Music musicFile) {
+    public BeatSlider(float min, float max, float stepSize, boolean vertical, Stage stage, MusicConverter music, SimpleAudioPlayer player) {
         super(min, max, stepSize, vertical);
 
         this.music = music;
-        this.musicFile = musicFile;
+        this.musicPlayer = player;
 
         this.editMode = false;
         this.stage = stage;
@@ -45,7 +47,7 @@ public class BeatSlider extends VisSlider {
         addListener(new ClickListener(){
             @Override
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
-                String stringPosition = LocalTime.ofSecondOfDay(Math.round(getValue() / 1000)).format(MusicConverter.AUDIO_FORMAT);
+                String stringPosition = LocalTime.ofSecondOfDay(Math.round(getValue())).format(MusicConverter.AUDIO_FORMAT);
                 sliderTimeInfo.setText(stringPosition);
                 GlyphLayout layoutLabel = sliderTimeInfo.getGlyphLayout();
                 float sliderX = (getValue() * getWidth() / (getMaxValue() - getMinValue())) + getX() - layoutLabel.width / 2;
@@ -57,7 +59,7 @@ public class BeatSlider extends VisSlider {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 float sliderX = (getValue() * getWidth() / (getMaxValue() - getMinValue())) + getX();
                 sliderTimeInfo.setPosition(sliderX,getY() + getHeight() + 15);
-                String stringPosition = LocalTime.ofSecondOfDay(Math.round(getValue() / 1000)).format(MusicConverter.AUDIO_FORMAT);
+                String stringPosition = LocalTime.ofSecondOfDay(Math.round(getValue())).format(MusicConverter.AUDIO_FORMAT);
                 sliderTimeInfo.setText(stringPosition);
                 sliderTimeInfo.setVisible(true);
                 return super.touchDown(event, x, y, pointer, button);
@@ -97,11 +99,11 @@ public class BeatSlider extends VisSlider {
             beatRolls[i] = new BeatRoll(i, barSelector[i], getMaxValue(), getMinValue(), this);
             beatRolls[i].addTagClickAction(new ClickListener() {
                 public void clicked(InputEvent event, float x, float y) {
-                    musicFile.pause();
+                    musicPlayer.pause();
                     BeatRollTile tag = (BeatRollTile) event.getListenerActor();
-                    long millis = music.getMillisFromBeatTraceIndex(tag.getSliderIndex());
-                    setValue(millis);
-                    musicFile.setPosition(millis / 1000f);
+                    double seconds = music.getSecondsFromBeatTraceIndex(tag.getSliderIndex());
+                    setValue(Double.valueOf(seconds).floatValue());
+                    musicPlayer.setSecondPosition(getValue());
 
                     for(VisRadioButton selector : barSelector)
                         selector.setChecked(false);
@@ -117,14 +119,14 @@ public class BeatSlider extends VisSlider {
 
     public void handleInput(Configurations configs){
         if(!isTextBoxSelected()) {
-            long millisPosition = Math.round(musicFile.getPosition() * 1000);
-            int beatTrace = music.getBeatTrace(getValue());
+            double secondsPosition = (musicPlayer.getSecondsPosition());
+            int beatTrace = music.getBeatTrace(secondsPosition);
             if (Gdx.input.isKeyJustPressed(configs.editLeftBeatKey)) {
-                music.setBeatTrace(millisPosition, LEFT_BEAT << (2 * getSelectedBeatIndex()), true);
+                music.setBeatTrace(secondsPosition, LEFT_BEAT << (2 * getSelectedBeatIndex()), true);
                 updateTags();
             }
             if (Gdx.input.isKeyJustPressed(configs.editRightBeatKey)) {
-                music.setBeatTrace(millisPosition, RIGHT_BEAT << (2 * getSelectedBeatIndex()), true);
+                music.setBeatTrace(secondsPosition, RIGHT_BEAT << (2 * getSelectedBeatIndex()), true);
                 updateTags();
             }
             if (Gdx.input.isKeyJustPressed(configs.deleteBeatKey)) {
@@ -132,7 +134,7 @@ public class BeatSlider extends VisSlider {
                 value = value << (2 * getSelectedBeatIndex());
                 value = value ^ 255;
                 value = beatTrace & value;
-                music.setBeatTrace(millisPosition, value, false);
+                music.setBeatTrace(secondsPosition, value, false);
                 updateTags();
             }
         }

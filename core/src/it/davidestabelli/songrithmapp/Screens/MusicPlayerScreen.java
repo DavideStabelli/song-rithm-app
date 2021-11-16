@@ -1,5 +1,6 @@
 package it.davidestabelli.songrithmapp.Screens;
 
+import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -26,12 +27,16 @@ import com.kotcrab.vis.ui.widget.VisSlider;
 
 import it.davidestabelli.songrithmapp.Helper.Configurations;
 import it.davidestabelli.songrithmapp.Helper.ImportedFileHandler;
+import it.davidestabelli.songrithmapp.Helper.SimpleAudioPlayer;
 import it.davidestabelli.songrithmapp.MainGame;
 import it.davidestabelli.songrithmapp.Helper.MusicConverter;
 import it.davidestabelli.songrithmapp.Sprite.BeatBar;
 import it.davidestabelli.songrithmapp.Sprite.BeatCircle;
 import it.davidestabelli.songrithmapp.Sprite.BeatCircleAnimation;
 import it.davidestabelli.songrithmapp.Sprite.BeatSlider;
+
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class MusicPlayerScreen implements Screen {
     public static final short RIGHT_BEAT = 1;
@@ -57,7 +62,8 @@ public class MusicPlayerScreen implements Screen {
     //float barRefreshTime;
 
     private MusicConverter music;
-    private Music musicFile;
+    //private Music musicFile;
+    private SimpleAudioPlayer musicPlayer;
     private boolean isRec;
 
     private Texture playButtonTexture;
@@ -77,9 +83,17 @@ public class MusicPlayerScreen implements Screen {
     public MusicPlayerScreen(final MainGame mainGame, MusicConverter musicFromMenu) {
         this.game = mainGame;
         this.music = musicFromMenu;
+
+        /*
         musicFile = Gdx.audio.newMusic(music.getOggTarget());
         musicFile.setLooping(false);
         musicFile.setVolume(1f);
+         */
+        try {
+            musicPlayer = new SimpleAudioPlayer(music.getWavTarget().file());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -105,12 +119,12 @@ public class MusicPlayerScreen implements Screen {
         playPauseButton = new VisImage(playButtonTexture);
         playPauseButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                if (musicFile.isPlaying()) {
-                    musicFile.pause();
+                if (musicPlayer.isPlaying()) {
+                    musicPlayer.pause();
                     for(BeatCircle beatCircle : beatCircles)
                         beatCircle.setActivateEffect(false);
                 } else {
-                    musicFile.play();
+                    musicPlayer.play();
                     if(!isRec) {
                         for(BeatCircle beatCircle : beatCircles)
                             beatCircle.setActivateEffect(true);
@@ -121,7 +135,7 @@ public class MusicPlayerScreen implements Screen {
         stage.addActor(playPauseButton);
 
         // music slider
-        musicSlider = new BeatSlider(0f, music.getDuration(), 0.01f, false, stage, music, musicFile);
+        musicSlider = new BeatSlider(0f, musicPlayer.getSecondsLenght(), 0.01f, false, stage, music, musicPlayer);
         musicSlider.addListener(new ClickListener() {
             @Override
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
@@ -130,7 +144,7 @@ public class MusicPlayerScreen implements Screen {
 
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                musicFile.pause();
+                musicPlayer.pause();
                 for(BeatCircle beatCircle : beatCircles)
                     beatCircle.setActivateEffect(false);
                 return super.touchDown(event, x, y, pointer, button);
@@ -138,9 +152,9 @@ public class MusicPlayerScreen implements Screen {
 
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-                musicFile.setPosition(musicSlider.getValue() / 1000);
+                musicPlayer.setSecondPosition(musicSlider.getValue());
                 if(!isRec){
-                    musicFile.play();
+                    musicPlayer.play();
                     for(BeatCircle beatCircle : beatCircles)
                         beatCircle.setActivateEffect(true);
                 }
@@ -149,9 +163,9 @@ public class MusicPlayerScreen implements Screen {
 
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                musicFile.setPosition(musicSlider.getValue() / 1000);
+                musicPlayer.setSecondPosition(musicSlider.getValue());
                 if(!isRec) {
-                    musicFile.play();
+                    musicPlayer.play();
                     for(BeatCircle beatCircle : beatCircles)
                         beatCircle.setActivateEffect(true);
                 }
@@ -362,18 +376,18 @@ public class MusicPlayerScreen implements Screen {
     public void update(float dt) {
         handleInput(dt);
 
-        if (music != null && musicFile != null) {
+        if (music != null && musicPlayer != null) {
             // slider progress
-            if (musicFile.isPlaying())
-                musicSlider.setValue(musicFile.getPosition() * 1000);
+            if (musicPlayer.isPlaying())
+                musicSlider.setValue(musicPlayer.getSecondsPosition());
 
             // is music playing update
-            if (!musicFile.isPlaying())
+            if (!musicPlayer.isPlaying())
                 playPauseButton.setDrawable(playButtonTexture);
             else
                 playPauseButton.setDrawable(pauseButtonTexture);
 
-            String stringPosition = LocalTime.ofSecondOfDay(Math.round(musicSlider.getValue() / 1000)).format(MusicConverter.AUDIO_FORMAT);
+            String stringPosition = LocalTime.ofSecondOfDay(Math.round(musicPlayer.getSecondsPosition())).format(MusicConverter.AUDIO_FORMAT);
 
             fileLabel.setText(String.format("%s / %s", stringPosition, music.getStringedDuration()));
 
@@ -409,12 +423,12 @@ public class MusicPlayerScreen implements Screen {
 
         // pause with space key
         if(Gdx.input.isKeyJustPressed(game.configs.pauseMusicKey) && !musicSlider.isTextBoxSelected()){
-            if (musicFile.isPlaying()) {
-                musicFile.pause();
+            if (musicPlayer.isPlaying()) {
+                musicPlayer.pause();
                 for(BeatCircle beatCircle : beatCircles)
                     beatCircle.setActivateEffect(false);
             } else {
-                musicFile.play();
+                musicPlayer.play();
                 if(!isRec) {
                     for(BeatCircle beatCircle : beatCircles)
                         beatCircle.setActivateEffect(true);
@@ -422,7 +436,7 @@ public class MusicPlayerScreen implements Screen {
             }
         }
 
-        int beatTrace = music.getBeatTrace(musicSlider.getValue());
+        int beatTrace = music.getBeatTrace(musicPlayer.getSecondsPosition());
 
         // rec update
         if(isRec){
@@ -434,15 +448,15 @@ public class MusicPlayerScreen implements Screen {
             // set beat cirle activation
             BeatCircle beatCircle = beatCircles[i];
             beatCircle.setColor(music.getBeatTraceColor()[i/2]);
-            if((beatTrace & (1 << i)) == (1 << i) && musicFile.isPlaying())
+            if((beatTrace & (1 << i)) == (1 << i) && musicPlayer.isPlaying())
                 beatCircle.setActive(true);
             else
                 beatCircle.setActive(false);
 
             // set beat cirle animation
-            Long futureBeatTracePosition = music.getBeatTraceIndexFromMillis(musicSlider.getValue() + beatCircle.getAnimationDuration());
+            Long futureBeatTracePosition = music.getBeatTraceIndexFromSeconds(musicPlayer.getSecondsPosition() + beatCircle.getAnimationDuration());
             int futureBeatTrace = music.getBeatTrace()[futureBeatTracePosition.intValue()];
-            if((futureBeatTrace & (1 << i)) == (1 << i) && musicFile.isPlaying())
+            if((futureBeatTrace & (1 << i)) == (1 << i) && musicPlayer.isPlaying())
                 beatCircle.addCircleAnimation(futureBeatTracePosition);
 
             beatCircle.update(dt);
@@ -512,7 +526,6 @@ public class MusicPlayerScreen implements Screen {
     public void dispose() {
         System.out.println("DISPOSING MUSIC PLAYER SCREEN");
         stage.dispose();
-        musicFile.dispose();
         playButtonTexture.dispose();
         pauseButtonTexture.dispose();
         background.dispose();

@@ -38,17 +38,17 @@ public class ImportedFileHandler {
                 Files.createDirectory(localFileFolder.toPath());
             }
 
-            String oggFilePathString = localPathString + "/" + musicElaboratedFile.getFileName() + ".ogg";
-            File oggLocalFile = new File(oggFilePathString);
-            if(!musicElaboratedFile.getOggTarget().path().equals(oggLocalFile.getPath()))
-                Files.copy(musicElaboratedFile.getOggTarget().file().toPath(), oggLocalFile.toPath());
+            String wavFilePathString = localPathString + "/" + musicElaboratedFile.getFileName() + ".wav";
+            File wavLocalFile = new File(wavFilePathString);
+            if(!musicElaboratedFile.getWavTarget().path().equals(wavLocalFile.getPath()))
+                Files.copy(musicElaboratedFile.getWavTarget().file().toPath(), wavLocalFile.toPath());
 
             String dataFilePathString = localPathString + "/" + musicElaboratedFile.getFileName() + ".json";
             File dataLocalFile = new File(dataFilePathString);
             FileOutputStream outputStream = new FileOutputStream(dataLocalFile);
 
             Map<String,Object> fileContentMap = new HashMap<>();
-            fileContentMap.put("oggPath", musicElaboratedFile.getOggTarget().path());
+            fileContentMap.put("oggPath", musicElaboratedFile.getWavTarget().path());
 
             fileContentMap.put("numberOfTraces", musicElaboratedFile.getNumberOfBeatTraces());
 

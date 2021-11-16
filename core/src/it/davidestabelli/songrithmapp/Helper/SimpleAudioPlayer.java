@@ -74,23 +74,23 @@ public class SimpleAudioPlayer {
     }
 
     // Method to jump over a specific part
-    public void setPosition(float frame) throws UnsupportedAudioFileException, IOException,
-            LineUnavailableException
+    public void setPosition(long frame)
     {
         int framePosition = Math.round(frame);
-        if (frame > 0 && frame < clip.getFrameLength())
+        if (frame >= 0 && frame <= clip.getFrameLength())
         {
             clip.stop();
-            clip.close();
-            resetAudioStream();
-            pausePosition = framePosition;
             clip.setFramePosition(framePosition);
             //this.play();
         }
     }
 
-    public float getSecondsFromFrames(float frames){
-        return (clip.getLongFramePosition() / clip.getFormat().getFrameRate());
+    public void setSecondPosition(double seconds){
+        setPosition(secondsToFrame(seconds));
+    }
+
+    public float getSecondsPosition(){
+        return  BigDecimalRounder.roundFloat(clip.getLongFramePosition() / clip.getFormat().getFrameRate(), 2);
     }
 
     public float getPosition(){
@@ -101,12 +101,20 @@ public class SimpleAudioPlayer {
         return clip.getFrameLength();
     }
 
-    public long getMillisPosition(){
-        return Math.round(getSecondsFromFrames(getFrameLenght()) * 1000f);
+    public long secondsToFrame(double seconds){
+        return Math.round(seconds * clip.getFormat().getFrameRate());
     }
 
-    public long getMillisLenght(){
-        return Math.round(clip.getMicrosecondLength() / 1000f);
+    public float frameToSeconds(long frame){
+        return  BigDecimalRounder.roundFloat(frame / clip.getFormat().getFrameRate(),2);
+    }
+
+    public long getMillisPosition(){
+        return Math.round(getSecondsPosition() * 1000f);
+    }
+
+    public float getSecondsLenght(){
+        return frameToSeconds(getFrameLenght());
     }
 
     // Method to reset audio stream
