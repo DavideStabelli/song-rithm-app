@@ -110,6 +110,13 @@ public class BeatSlider extends VisSlider {
                     barSelector[tag.getBeatTraceIndex()].setChecked(true);
                 }
             });
+            beatRolls[i].addClearClickAction(new ClickListener() {
+                public void clicked(InputEvent event, float x, float y) {
+                    int index = ((BeatRoll)event.getListenerActor().getParent().getParent()).getBeatTraceIndex();
+                    music.clearBeatTrace(index);
+                    updateTags();
+                }
+            });
 
             beatRollsGroup.addActor(beatRolls[i]);
         }

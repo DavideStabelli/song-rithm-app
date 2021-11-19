@@ -50,7 +50,7 @@ public class MusicPlayerScreen implements Screen {
     private VisImage playPauseButton;
     private VisImage recButton;
     private VisImage backToMenu;
-    private VisImage clearButton;
+    //private VisImage clearButton;
     private VisImage addRollButton;
     private BeatSlider musicSlider;
     private VisLabel fileLabel;
@@ -203,22 +203,10 @@ public class MusicPlayerScreen implements Screen {
         editInfo.setPosition(Gdx.graphics.getWidth()/6, Gdx.graphics.getHeight()/2);
         stage.addActor(editInfo);
 
-        // clear beat button
-        clearButton = new VisImage(clearButtonTexture);
-        clearButton.setSize(50, 50);
-        clearButton.setPosition(recButton.getX() - clearButton.getWidth() - 20, recButton.getY());
-        clearButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
-                music.clearBeatTrace();
-                musicSlider.updateTags();
-            }
-        });
-        stage.addActor(clearButton);
-
         // add roll button
         addRollButton = new VisImage(addButtonTexture);
         addRollButton.setSize(30, 30);
-        addRollButton.setPosition(clearButton.getX() - addRollButton.getWidth() - 20, clearButton.getY() + (clearButton.getHeight() - addRollButton.getHeight()) / 2);
+        addRollButton.setPosition(recButton.getX() - addRollButton.getWidth() - 20, recButton.getY() + (recButton.getHeight() - addRollButton.getHeight()) / 2);
         addRollButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 if(music.addBeatTrace()){
@@ -315,7 +303,6 @@ public class MusicPlayerScreen implements Screen {
             beatBar.setHidden(false);
          */
 
-        clearButton.setVisible(false);
         addRollButton.setVisible(false);
 
         for (int i = 0; i < beatCircleLabels.length; i++) {
@@ -357,7 +344,6 @@ public class MusicPlayerScreen implements Screen {
             beatBar.setHidden(true);
          */
 
-        clearButton.setVisible(true);
         addRollButton.setVisible(true);
 
         for (int i = 0; i < beatCircleLabels.length; i++)

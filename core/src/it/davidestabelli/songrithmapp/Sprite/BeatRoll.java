@@ -38,6 +38,7 @@ public class BeatRoll extends Group {
     private VisLabel barNameLabel;
     private VisImage deleteButton;
     private VisImage changeColorButton;
+    private VisImage clearButton;
     private ColorPicker colorPicker;
     private VisRadioButton selector;
 
@@ -106,6 +107,13 @@ public class BeatRoll extends Group {
         changeColorButton.setPosition(deleteButton.getX() + deleteButton.getWidth() + MENU_BAR_HEIGHT, 0);
         menuBar.addActor(changeColorButton);
 
+        // clear beat button
+        clearButton = new VisImage(new Texture("trash_close.png"));
+        clearButton.setSize(MENU_BAR_HEIGHT, MENU_BAR_HEIGHT);
+        clearButton.setPosition(changeColorButton.getX() + changeColorButton.getWidth() + MENU_BAR_HEIGHT, 0);
+
+        menuBar.addActor(clearButton);
+
         this.colorPicker = new ColorPicker();
         colorPicker.setColor(parentSlider.getMusic().getBeatTraceColor()[beatTraceIndex]);
         colorPicker.setListener(new ColorPickerListener() {
@@ -135,6 +143,10 @@ public class BeatRoll extends Group {
 
     public void addTagClickAction(ClickListener callable){
         this.callableTagClickEvent = callable;
+    }
+
+    public void addClearClickAction(ClickListener callable){
+        clearButton.addListener(callable);
     }
 
     public void updateTags(MusicConverter music){
@@ -183,16 +195,19 @@ public class BeatRoll extends Group {
         selector.setColor(music.getBeatTraceColor()[beatTraceIndex]);
         changeColorButton.setColor(music.getBeatTraceColor()[beatTraceIndex]);
         deleteButton.setColor(music.getBeatTraceColor()[beatTraceIndex]);
+        clearButton.setColor(music.getBeatTraceColor()[beatTraceIndex]);
 
         if(!selector.isChecked()){
             barName.setVisible(false);
             barNameLabel.setVisible(true);
             changeColorButton.setVisible(false);
             deleteButton.setVisible(false);
+            clearButton.setVisible(false);
         } else {
             barName.setVisible(true);
             barNameLabel.setVisible(false);
             changeColorButton.setVisible(true);
+            clearButton.setVisible(true);
             deleteButton.setVisible(true);
         }
         if(parentSlider.getBeatRollsLenght() <=  1)
@@ -211,5 +226,9 @@ public class BeatRoll extends Group {
 
     public boolean isNameFieldFocused(){
         return barName.hasKeyboardFocus();
+    }
+
+    public int getBeatTraceIndex() {
+        return beatTraceIndex;
     }
 }
