@@ -147,6 +147,12 @@ public class MenuScreen implements Screen {
         configButton.setSize((Gdx.graphics.getWidth() / 6), (Gdx.graphics.getHeight() / 8));
         configButton.setPosition((Gdx.graphics.getWidth() / 4) * 3 - (startButton.getWidth() / 2),
                 (Gdx.graphics.getHeight() / 8) * 3);
+        configButton.addListener(new ClickListener() {
+            public void clicked(InputEvent event, float x, float y) {
+                dispose();
+                game.setScreen(new ConfigScreen(mainGame));
+            }
+        });
         stage.addActor(configButton);
 
         // import from URL

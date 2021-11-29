@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
@@ -25,6 +26,8 @@ import javax.swing.JFileChooser;
 
 public class ImportedFileHandler {
     public static final String FOLDER_PATH = (new JFileChooser().getFileSystemView().getDefaultDirectory().toString()) + "/RythmSong/";
+    public static final String CONFIG_PATH = FOLDER_PATH + "configs.json";
+
 
     public static void importNewFile(MusicConverter musicElaboratedFile) {
         try {
@@ -177,6 +180,64 @@ public class ImportedFileHandler {
             return true;
         } catch (Exception e){
             return false;
+        }
+    }
+
+    public static Configurations readConfigurations(){
+        try {
+            File localFolder = new File(FOLDER_PATH);
+            if (!localFolder.exists())
+                Files.createDirectory(localFolder.toPath());
+
+            File localFileConfig = new File(CONFIG_PATH);
+            if(localFileConfig.exists()) {
+                String content = new String(Files.readAllBytes(localFileConfig.toPath()));
+                Map<String, Object> mappedConfigs = JSONObject.parseObject(content).getInnerMap();
+                Configurations config = new Configurations();
+                for (String key : mappedConfigs.keySet()) {
+                    Object value = mappedConfigs.get(key);
+                    Field field = config.getClass().getDeclaredField(key);
+                    field.set(config, value);
+                }
+                return config;
+            } else {
+                return new Configurations();
+            }
+        } catch (Exception e){
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return new Configurations();
+        }
+    }
+
+    public static void saveConfigurations(Configurations configs){
+        try {
+            File localFolder = new File(FOLDER_PATH);
+            if (!localFolder.exists())
+                Files.createDirectory(localFolder.toPath());
+
+            File localFileConfig = new File(CONFIG_PATH);
+
+            Map<String, Object> mappedConfigs;
+            if(localFileConfig.exists()) {
+                String content = new String(Files.readAllBytes(localFileConfig.toPath()));
+                mappedConfigs = JSONObject.parseObject(content).getInnerMap();
+            } else {
+                mappedConfigs = new HashMap();
+            }
+            Field[] configFields = configs.getClass().getFields();
+            for(int i = 0; i < configFields.length; i++){
+                Field configField = configFields[i];
+                mappedConfigs.put(configField.getGenericType().getTypeName(), configField.get(configs));
+            }
+
+            FileOutputStream outputStream = new FileOutputStream(localFileConfig);
+            JSONObject fileContent = new JSONObject(mappedConfigs);
+            outputStream.write(fileContent.toString().getBytes());
+            outputStream.close();
+        } catch (Exception e){
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 }
