@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.*;
+import it.davidestabelli.songrithmapp.Helper.Configurations;
 import it.davidestabelli.songrithmapp.Helper.ImportedFileHandler;
 import it.davidestabelli.songrithmapp.MainGame;
 
@@ -23,7 +24,7 @@ import java.lang.reflect.Field;
 
 public class ConfigScreen implements Screen {
     private static final float CONFIG_WIDTH = 200;
-    private static final float CONFIG_HEIGHT = 20f;
+    private static final float CONFIG_HEIGHT = 30f;
 
     public MainGame game;
 
@@ -54,7 +55,7 @@ public class ConfigScreen implements Screen {
         backToMenu.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 dispose();
-                ImportedFileHandler.saveConfigurations(mainGame.configs);
+                ImportedFileHandler.saveConfigurations(Configurations.getInstance());
                 game.setScreen(new MenuScreen(game));
             }
         });
@@ -68,12 +69,12 @@ public class ConfigScreen implements Screen {
         int numberOfColumns = Math.round((centerWindow.getWidth() - CONFIG_WIDTH) / CONFIG_WIDTH);
         centerWindow.columnDefaults(numberOfColumns).left();
 
-        Field[] configFields = mainGame.configs.getClass().getFields();
+        Field[] configFields = Configurations.getInstance().getClass().getFields();
         int rowNumber = 1;
         for(int i = 0; i < configFields.length; i++){
             Group fieldComponent = new Group();
             Field configField = configFields[i];
-            int columnNumber = (i+1) % numberOfColumns;
+            int columnNumber = (i % numberOfColumns) + 1;
 
             Widget inputField = null;
 
@@ -85,14 +86,14 @@ public class ConfigScreen implements Screen {
                             case "KeyConfiguration":
                                 inputField = new VisTextField();
                                 try{
-                                    ((VisTextField)inputField).setText(Input.Keys.toString(configField.getInt(mainGame.configs)));
+                                    ((VisTextField)inputField).setText(Input.Keys.toString(configField.getInt(Configurations.getInstance())));
                                 }catch(Exception e){}
                                 inputField.addListener(new ClickListener() {
                                     @Override
                                     public boolean keyTyped(InputEvent event, char character) {
                                         try{
-                                            configField.set(mainGame.configs, event.getKeyCode());
-                                            ((VisTextField)event.getListenerActor()).setText(Input.Keys.toString(configField.getInt(mainGame.configs)));
+                                            configField.set(Configurations.getInstance(), event.getKeyCode());
+                                            ((VisTextField)event.getListenerActor()).setText(Input.Keys.toString(configField.getInt(Configurations.getInstance())));
                                         }catch(Exception e){}
                                         return false;
                                     }
@@ -102,14 +103,15 @@ public class ConfigScreen implements Screen {
                     } else {
                         inputField = new VisTextField();
                         try{
-                            ((VisTextField)inputField).setText(String.valueOf(configField.getInt(mainGame.configs)));
+                            ((VisTextField)inputField).setText(String.valueOf(configField.getInt(Configurations.getInstance())));
                         }catch(Exception e){}
                         inputField.addListener(new ChangeListener() {
                             @Override
                             public void changed(ChangeEvent event, Actor actor) {
                                 VisTextField changedField = (VisTextField) actor;
                                 try {
-                                    configField.set(mainGame.configs, changedField.getText());
+                                    int value = Integer.parseInt(changedField.getText());
+                                    configField.set(Configurations.getInstance(), value);
                                 } catch (Exception e) {}
                             }
                         });
@@ -118,14 +120,14 @@ public class ConfigScreen implements Screen {
                 default:
                     inputField = new VisTextField();
                     try{
-                        ((VisTextField)inputField).setText(String.valueOf(configField.get(mainGame.configs)));
+                        ((VisTextField)inputField).setText(String.valueOf(configField.get(Configurations.getInstance())));
                     }catch(Exception e){}
                     inputField.addListener(new ChangeListener() {
                         @Override
                         public void changed(ChangeEvent event, Actor actor) {
                             VisTextField changedField = (VisTextField) actor;
                             try {
-                                configField.set(mainGame.configs, changedField.getText());
+                                configField.set(Configurations.getInstance(), changedField.getText());
                             } catch (Exception e) {}
                         }
                     });
@@ -135,6 +137,10 @@ public class ConfigScreen implements Screen {
             inputField.setWidth(CONFIG_WIDTH);
             fieldComponent.addActor(inputField);
             VisLabel label = new VisLabel(configField.getName());
+            label.setWrap(true);
+            label.setWidth(CONFIG_WIDTH);
+            label.pack();
+            label.setWidth(CONFIG_WIDTH);
             label.setY(inputField.getHeight());
             fieldComponent.addActor(label);
             centerWindow.add(fieldComponent).expand().fillX();

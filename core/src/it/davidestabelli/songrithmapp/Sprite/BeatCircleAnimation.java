@@ -7,11 +7,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
+import it.davidestabelli.songrithmapp.Helper.Configurations;
 
 public class BeatCircleAnimation {
-    public static final float START_ANIMATION_CIRCLE_DIAMETER_FRACTION = 2.5f;
-    public static final float ANIMATION_DIAMETER_DELTA = 60;
-
     private Texture texture;
     private ShapeRenderer circleRenderer;
 
@@ -32,7 +30,7 @@ public class BeatCircleAnimation {
         Gdx.gl.glLineWidth(3);
 
         this.finalPosition = position;
-        this.startDiameter = finalDiameter / START_ANIMATION_CIRCLE_DIAMETER_FRACTION;
+        this.startDiameter = finalDiameter / Configurations.getInstance().START_ANIMATION_CIRCLE_DIAMETER_FRACTION;
         this.finalDiameter = finalDiameter;
         this.diameter = startDiameter;
         this.animationId = id;
@@ -42,9 +40,9 @@ public class BeatCircleAnimation {
 
     public boolean update(float dt){
         if(startDiameter > finalDiameter)
-            diameter -= ANIMATION_DIAMETER_DELTA * dt;
+            diameter -= Configurations.getInstance().ANIMATION_DIAMETER_DELTA * dt;
         else
-            diameter += ANIMATION_DIAMETER_DELTA * dt;
+            diameter += Configurations.getInstance().ANIMATION_DIAMETER_DELTA * dt;
         float diameterDelta = Math.abs(this.diameter/2 - this.finalDiameter/2);
         float baseDelta = Math.abs(startDiameter/2 - this.finalDiameter/2);
         float multiplier = diameterDelta / baseDelta;
@@ -81,7 +79,7 @@ public class BeatCircleAnimation {
     }
 
     public static float animationDuration(float finalRadius){
-        return (Math.abs((finalRadius / START_ANIMATION_CIRCLE_DIAMETER_FRACTION) - finalRadius) / Math.abs(ANIMATION_DIAMETER_DELTA));
+        return (Math.abs((finalRadius / Configurations.getInstance().START_ANIMATION_CIRCLE_DIAMETER_FRACTION) - finalRadius) / Math.abs(Configurations.getInstance().ANIMATION_DIAMETER_DELTA));
     }
 
     public void setColor(Color color){

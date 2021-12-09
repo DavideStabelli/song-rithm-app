@@ -1,7 +1,6 @@
 package it.davidestabelli.songrithmapp.Sprite;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -128,15 +127,15 @@ public class BeatSlider extends VisSlider {
         if(!isTextBoxSelected()) {
             double secondsPosition = (musicPlayer.getSecondsPosition());
             int beatTrace = music.getBeatTrace(secondsPosition);
-            if (Gdx.input.isKeyJustPressed(configs.editLeftBeatKey)) {
+            if (Gdx.input.isKeyJustPressed(configs.Edit_Left_Beat_Key)) {
                 music.setBeatTrace(secondsPosition, LEFT_BEAT << (2 * getSelectedBeatIndex()), true);
                 updateTags();
             }
-            if (Gdx.input.isKeyJustPressed(configs.editRightBeatKey)) {
+            if (Gdx.input.isKeyJustPressed(configs.Edit_Right_Beat_Key)) {
                 music.setBeatTrace(secondsPosition, RIGHT_BEAT << (2 * getSelectedBeatIndex()), true);
                 updateTags();
             }
-            if (Gdx.input.isKeyJustPressed(configs.deleteBeatKey)) {
+            if (Gdx.input.isKeyJustPressed(configs.Delete_Beat_Key)) {
                 int value = LEFT_BEAT + RIGHT_BEAT;
                 value = value << (2 * getSelectedBeatIndex());
                 value = value ^ 255;

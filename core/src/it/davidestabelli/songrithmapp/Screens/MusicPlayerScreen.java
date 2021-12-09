@@ -1,16 +1,9 @@
 package it.davidestabelli.songrithmapp.Screens;
 
-import java.io.IOException;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -23,20 +16,14 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.VisImage;
 import com.kotcrab.vis.ui.widget.VisLabel;
-import com.kotcrab.vis.ui.widget.VisSlider;
 
 import it.davidestabelli.songrithmapp.Helper.Configurations;
 import it.davidestabelli.songrithmapp.Helper.ImportedFileHandler;
 import it.davidestabelli.songrithmapp.Helper.SimpleAudioPlayer;
 import it.davidestabelli.songrithmapp.MainGame;
 import it.davidestabelli.songrithmapp.Helper.MusicConverter;
-import it.davidestabelli.songrithmapp.Sprite.BeatBar;
 import it.davidestabelli.songrithmapp.Sprite.BeatCircle;
-import it.davidestabelli.songrithmapp.Sprite.BeatCircleAnimation;
 import it.davidestabelli.songrithmapp.Sprite.BeatSlider;
-
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class MusicPlayerScreen implements Screen {
     public static final short RIGHT_BEAT = 1;
@@ -408,7 +395,7 @@ public class MusicPlayerScreen implements Screen {
         }
 
         // pause with space key
-        if(Gdx.input.isKeyJustPressed(game.configs.pauseMusicKey) && !musicSlider.isTextBoxSelected()){
+        if(Gdx.input.isKeyJustPressed(Configurations.getInstance().Pause_Music_Key) && !musicSlider.isTextBoxSelected()){
             if (musicPlayer.isPlaying()) {
                 musicPlayer.pause();
                 for(BeatCircle beatCircle : beatCircles)
@@ -426,7 +413,7 @@ public class MusicPlayerScreen implements Screen {
 
         // rec update
         if(isRec){
-            musicSlider.handleInput(game.configs);
+            musicSlider.handleInput(Configurations.getInstance());
             musicSlider.update(music);
         }
 

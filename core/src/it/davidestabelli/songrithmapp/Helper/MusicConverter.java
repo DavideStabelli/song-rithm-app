@@ -1,26 +1,19 @@
 package it.davidestabelli.songrithmapp.Helper;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSONArray;
 import com.badlogic.gdx.files.FileHandle;
 
 import com.badlogic.gdx.graphics.Color;
-import it.davidestabelli.songrithmapp.Helper.FFT.FFT;
-import it.davidestabelli.songrithmapp.Helper.FFT.WaveDecoder;
 import ws.schild.jave.Encoder;
 import ws.schild.jave.EncoderException;
 import ws.schild.jave.MultimediaObject;
@@ -29,7 +22,6 @@ import ws.schild.jave.encode.EncodingAttributes;
 
 @SuppressWarnings("NewApi")
 public class MusicConverter {
-    private static final float BEAT_TRACE_SAMPLE = 0.1f;
     public static final DateTimeFormatter AUDIO_FORMAT = DateTimeFormatter.ofPattern("mm:ss");
 
     private File source;		                 
@@ -52,6 +44,8 @@ public class MusicConverter {
     private Color[] beatTraceColor;
     private String[] beatTraceNames;
 
+    private float beatTraceSample;
+
     public MusicConverter(String wavPath, int[] beatTrace, String name, int numberOfBeatTraces, Color[] beatTraceColor, String[] beatTraceNames) throws EncoderException {
         this.wavTarget = new File(wavPath);
 
@@ -64,9 +58,11 @@ public class MusicConverter {
         this.sourceFormat = sourceObject.getInfo().getFormat();
         this.fileName = name;
 
+        this.beatTraceSample = 1f / Configurations.getInstance().Beat_Samples_Per_Second;
+
         //Set Beat Trace
         if(beatTrace == null) {
-            int beatsIntoTrace = Math.round(secondsDuration / BEAT_TRACE_SAMPLE);
+            int beatsIntoTrace = Math.round(secondsDuration / beatTraceSample);
             this.beatTrace = new int[beatsIntoTrace];
             for (int i = 0; i < beatsIntoTrace; i++)
                 this.beatTrace[i] = 0;
@@ -168,7 +164,7 @@ public class MusicConverter {
     }
 
     public double getSecondsFromBeatTraceIndex(int index){
-        double rawSeconds = (index * durationBeatTraceRatio) + BEAT_TRACE_SAMPLE / 2;
+        double rawSeconds = (index * durationBeatTraceRatio) + beatTraceSample / 2;
 
         return rawSeconds;
     }

@@ -115,7 +115,8 @@ public class ImportedFileHandler {
         if(folder.exists()){
             File[] files = folder.listFiles();
             for (File file : files) {
-                listOfImportedFiles.add(file.getName().split("\\.")[0]);
+                if(file.isDirectory())
+                    listOfImportedFiles.add(file.getName().split("\\.")[0]);
             }
         }
         return listOfImportedFiles;
@@ -228,7 +229,7 @@ public class ImportedFileHandler {
             Field[] configFields = configs.getClass().getFields();
             for(int i = 0; i < configFields.length; i++){
                 Field configField = configFields[i];
-                mappedConfigs.put(configField.getGenericType().getTypeName(), configField.get(configs));
+                mappedConfigs.put(configField.getName(), configField.get(configs));
             }
 
             FileOutputStream outputStream = new FileOutputStream(localFileConfig);
